@@ -48,4 +48,4 @@ Check the "issues" tab. If you'd like to add any kind of improvement, I would be
 
 # License
 
-NoComment is licensed under the [MIT](LICENSE.txt) license.
+MIT
