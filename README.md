@@ -1,4 +1,4 @@
-![Logo](http://dsgriffin.github.io/images/logos/nocomment.png)
+# NoComment 🙊
 
 ![](https://img.shields.io/badge/version-2.0.0-green.svg)
 
@@ -14,13 +14,11 @@ You can even use the wildcard selector "*" to block or allow comments on specifi
 
 Examples:
 
-```www.youtube.com/*```
+```www.youtube.com/*``` (block or allow comments on all Youtube videos)
 
-```x.com/*/status/*```
+```x.com/*/status/*``` (block or all comments on all X statuses)
 
-```www.reddit.com/r/news/*```
-
-The first example blocks/allows all YouTube videos, the second blocks/allows all X statuses, and the third specifically only blocks/allows comments on all Reddit posts in the r/news subreddit.
+```www.reddit.com/r/news/*``` (block or all comments on all Reddit posts within the r/news subreddit)
 
 You're also able to change the way the comments are hidden; by default they are "collapsed" and remove the space taken originally like they never existed, but this can be changed to "hidden" if you'd like to keep the empty space the comments originally took.
 
