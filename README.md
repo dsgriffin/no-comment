@@ -4,7 +4,7 @@
 
 NoComment is a simple Chrome extension for hiding user-generated comments on the web.
 
-# Features
+## Features
 
 On a fresh installation, NoComment does not block any comments; if you'd like to block comments on specific websites/routes only, you can add those websites/routes to your "Blocklist".
 
@@ -22,13 +22,13 @@ Examples:
 
 You're also able to change the way the comments are hidden; by default they are "collapsed" and remove the space taken originally like they never existed, but this can be changed to "hidden" if you'd like to keep the empty space the comments originally took.
 
-# Chrome Web Store
+## Chrome Web Store
 
 http://chrome.google.com/webstore/detail/nocomment/bcaffknecaohmingfdfimlbllnebpepe
 
 Please feel free to rate & leave constructive feedback!
 
-# Build/Test
+## Build/Test
 
 **Build**
 
@@ -42,10 +42,10 @@ Please feel free to rate & leave constructive feedback!
 * Make sure the `Developer Mode` checkbox is ticked
 * Load the `dist/` folder as an unpacked extension
 
-# Contributing
+## Contributing
 
-Check the "issues" tab. If you'd like to add any kind of improvement, I would be grateful!
+If you've found a bug or have an idea, feel free to open an Issue. If you've got a fix or feature ready, open a PR. Thanks!
 
-# License
+## License
 
 MIT
