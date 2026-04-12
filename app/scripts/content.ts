@@ -86,6 +86,7 @@ let currentState: PageState = {
 };
 let observer: MutationObserver | null = null;
 let mutationFrame = 0;
+let blockingActive = false;
 
 const getStorage = async (): Promise<UserSettings> => {
   const stored = await chrome.storage.sync.get(STORAGE_DEFAULTS);
@@ -159,7 +160,7 @@ const isVisibleNode = (element: HTMLElement): boolean => {
 const dedupeNestedElements = (elements: HTMLElement[]): HTMLElement[] =>
   elements.filter((element) => !elements.some((candidate) => candidate !== element && candidate.contains(element)));
 
-const getCommentElements = (): HTMLElement[] => {
+const getCommentElements = (includeHidden = false): HTMLElement[] => {
   const selectors = getActiveSelectors();
   const matches = selectors.flatMap((selector) =>
     Array.from(document.querySelectorAll(selector)).filter(
@@ -168,8 +169,9 @@ const getCommentElements = (): HTMLElement[] => {
   );
 
   const uniqueMatches = Array.from(new Set(matches));
+  const dedupedMatches = dedupeNestedElements(uniqueMatches);
 
-  return dedupeNestedElements(uniqueMatches).filter(isVisibleNode);
+  return includeHidden ? dedupedMatches : dedupedMatches.filter(isVisibleNode);
 };
 
 const hideElement = (element: HTMLElement): void => {
@@ -204,7 +206,7 @@ const restoreHiddenElements = (): void => {
 const updateObserver = (shouldObserve: boolean): void => {
   if (shouldObserve && !observer) {
     observer = new MutationObserver(() => {
-      if (!currentState.isBlocking || mutationFrame !== 0) {
+      if (!blockingActive || mutationFrame !== 0) {
         return;
       }
 
@@ -241,18 +243,20 @@ const applySettings = async (resetExisting = false): Promise<PageState> => {
   }
 
   const comments = getCommentElements();
+  const allMatchedComments = getCommentElements(true);
   const shouldBlock = currentSettings.blockAllComments
     ? !matchesRule(currentSettings.allowlist)
     : matchesRule(currentSettings.blocklist);
+  blockingActive = shouldBlock;
 
   if (shouldBlock) {
     comments.forEach(hideElement);
   }
 
   currentState = {
-    blockableContent: comments.length > 0,
-    commentsLength: comments.length,
-    isBlocking: shouldBlock && comments.length > 0,
+    blockableContent: allMatchedComments.length > 0,
+    commentsLength: allMatchedComments.length,
+    isBlocking: shouldBlock && allMatchedComments.length > 0,
   };
 
   updateObserver(shouldBlock);

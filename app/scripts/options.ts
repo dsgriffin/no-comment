@@ -34,6 +34,14 @@ const blockNotice = document.getElementById("blockNotice");
 const modeSummaryTitle = document.getElementById("modeSummaryTitle");
 const modeSummaryBody = document.getElementById("modeSummaryBody");
 const listModeHint = document.getElementById("listModeHint");
+const saveHints: Record<ListType, HTMLElement | null> = {
+  allowlist: document.getElementById("allowlistSaveHint"),
+  blocklist: document.getElementById("blocklistSaveHint"),
+};
+const isListDirty: Record<ListType, boolean> = {
+  allowlist: false,
+  blocklist: false,
+};
 
 const tableBodies: Record<ListType, HTMLTableSectionElement> = {
   allowlist: document.querySelector("#allowlistTable tbody") as HTMLTableSectionElement,
@@ -57,6 +65,14 @@ const showNotice = (element: HTMLElement | null, message: string): void => {
   window.setTimeout(() => {
     element.hidden = true;
   }, 3000);
+};
+
+const syncDirtyState = (listType: ListType): void => {
+  const saveHint = saveHints[listType];
+
+  if (saveHint) {
+    saveHint.hidden = !isListDirty[listType];
+  }
 };
 
 const setActiveTab = async (tabName: string): Promise<void> => {
@@ -176,6 +192,8 @@ const addListItem = (listType: ListType): void => {
 
   state[listType] = Array.from(new Set([...state[listType], nextValue]));
   listInputs[listType].value = "";
+  isListDirty[listType] = true;
+  syncDirtyState(listType);
   renderList(listType);
 };
 
@@ -195,12 +213,16 @@ const editListItem = (listType: ListType, index: number): void => {
   state[listType][index] = nextValue;
   state[listType] = Array.from(new Set(state[listType]));
   selectedRows[listType] = null;
+  isListDirty[listType] = true;
+  syncDirtyState(listType);
   renderList(listType);
 };
 
 const deleteListItem = (listType: ListType, index: number): void => {
   state[listType] = state[listType].filter((_, currentIndex) => currentIndex !== index);
   selectedRows[listType] = null;
+  isListDirty[listType] = true;
+  syncDirtyState(listType);
   renderList(listType);
 };
 
@@ -217,11 +239,15 @@ const clearList = (listType: ListType): void => {
 
   state[listType] = [];
   selectedRows[listType] = null;
+  isListDirty[listType] = true;
+  syncDirtyState(listType);
   renderList(listType);
 };
 
 const saveList = async (listType: ListType): Promise<void> => {
   await chrome.storage.sync.set({ [listType]: state[listType] });
+  isListDirty[listType] = false;
+  syncDirtyState(listType);
   showNotice(listType === "allowlist" ? allowNotice : blockNotice, "Saved.");
 };
 
@@ -248,6 +274,8 @@ const loadSettings = async (): Promise<void> => {
   syncGeneralForm();
   renderList("allowlist");
   renderList("blocklist");
+  syncDirtyState("allowlist");
+  syncDirtyState("blocklist");
 
   const { currentTab = "general" } = await chrome.storage.local.get({ currentTab: "general" });
   await setActiveTab(String(currentTab));
@@ -307,6 +335,15 @@ Object.entries(listInputs).forEach(([listType, input]) => {
     event.preventDefault();
     addListItem(listType as ListType);
   });
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (!isListDirty.allowlist && !isListDirty.blocklist) {
+    return;
+  }
+
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 void loadSettings();
