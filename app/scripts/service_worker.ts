@@ -11,10 +11,17 @@ const setActionState = async (tabId: number): Promise<void> => {
     })) as PageState;
 
     if (response?.isBlocking) {
-      await chrome.action.enable(tabId);
       await chrome.action.setTitle({
         tabId,
         title: `NoComment is hiding ${response.commentsLength} comment section(s) on this page.`,
+      });
+      return;
+    }
+
+    if (response?.blockableContent) {
+      await chrome.action.setTitle({
+        tabId,
+        title: `NoComment found ${response.commentsLength} comment section(s), but your current rules are not blocking this page.`,
       });
       return;
     }
@@ -22,27 +29,25 @@ const setActionState = async (tabId: number): Promise<void> => {
     // Ignore tabs without a content-script context.
   }
 
-  await chrome.action.disable(tabId);
   await chrome.action.setTitle({
     tabId,
-    title: "NoComment is idle on this page.",
+    title: "NoComment is available on this page.",
   });
 };
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.action.disable();
+  chrome.action.setTitle({
+    title: "NoComment is available on this page.",
+  });
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  chrome.action.disable();
+  chrome.action.setTitle({
+    title: "NoComment is available on this page.",
+  });
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === "loading") {
-    chrome.action.disable(tabId);
-    return;
-  }
-
   if (changeInfo.status === "complete") {
     void setActionState(tabId);
   }
@@ -61,16 +66,19 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   const pageState = message.state as PageState;
 
   if (pageState?.isBlocking) {
-    void chrome.action.enable(tabId);
     void chrome.action.setTitle({
       tabId,
       title: `NoComment is hiding ${pageState.commentsLength} comment section(s) on this page.`,
     });
-  } else {
-    void chrome.action.disable(tabId);
+  } else if (pageState?.blockableContent) {
     void chrome.action.setTitle({
       tabId,
-      title: "NoComment is idle on this page.",
+      title: `NoComment found ${pageState.commentsLength} comment section(s), but this page is currently allowed.`,
+    });
+  } else {
+    void chrome.action.setTitle({
+      tabId,
+      title: "NoComment is available on this page.",
     });
   }
 

@@ -171,6 +171,17 @@ code {
   margin: 0 0 10px;
 }
 
+.statusCard {
+  background:
+    linear-gradient(135deg, rgba(199, 96, 45, 0.14), rgba(255, 250, 242, 0.92)),
+    var(--panel);
+}
+
+.helperText {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .choiceGrid {
   display: grid;
   gap: 12px;

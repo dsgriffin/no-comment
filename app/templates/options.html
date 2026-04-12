@@ -19,12 +19,18 @@
       </header>
 
       <nav class="tabs" aria-label="Settings sections">
-        <button type="button" data-action="tab" data-tab-target="general" aria-selected="true">General</button>
-        <button type="button" data-action="tab" data-tab-target="lists" aria-selected="false">Rules</button>
+        <button type="button" data-action="tab" data-tab-target="general" aria-selected="true">General Rules</button>
+        <button type="button" data-action="tab" data-tab-target="lists" aria-selected="false">Allowlist/Blocklist</button>
         <button type="button" data-action="tab" data-tab-target="about" aria-selected="false">About</button>
       </nav>
 
       <section class="panel" data-tab-panel="general">
+        <div class="card statusCard">
+          <p class="eyebrow">Current mode</p>
+          <h2 id="modeSummaryTitle">Block only listed sites</h2>
+          <p id="modeSummaryBody">NoComment will leave comments visible unless a page matches your Block List.</p>
+        </div>
+
         <div class="card">
           <h2>Default behaviour</h2>
           <p>Choose whether NoComment blocks comment sections everywhere by default, or only on sites you add to the Block List.</p>
@@ -59,10 +65,12 @@
       <section class="panel" data-tab-panel="lists" hidden>
         <div class="card">
           <h2>Pattern guide</h2>
-          <p>Add hostnames or route patterns. Wildcards with <code>*</code> are supported.</p>
+          <p>Add hostnames or route patterns. Wildcards with <code>*</code> are supported and protocols are optional.</p>
           <p><code>www.youtube.com/*</code></p>
           <p><code>x.com/*/status/*</code></p>
           <p><code>www.reddit.com/r/news/*</code></p>
+          <p><code>https://www.facebook.com/BitcoinMagazine/posts/*</code></p>
+          <p class="helperText" id="listModeHint">Block List entries are active right now because you are using block-only mode.</p>
         </div>
 
         <div class="listGrid">
@@ -71,6 +79,7 @@
               <div>
                 <p class="eyebrow">Exceptions</p>
                 <h2>Allow List</h2>
+                <p class="helperText">Use this when you want comments blocked everywhere else.</p>
               </div>
               <div class="inlineActions">
                 <button type="button" data-action="clear" data-list-type="allowlist">Clear all</button>
@@ -100,6 +109,7 @@
               <div>
                 <p class="eyebrow">Targets</p>
                 <h2>Block List</h2>
+                <p class="helperText">Use this when you only want to block specific pages or sites.</p>
               </div>
               <div class="inlineActions">
                 <button type="button" data-action="clear" data-list-type="blocklist">Clear all</button>

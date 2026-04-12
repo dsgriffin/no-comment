@@ -31,6 +31,9 @@ const visualDisplay = document.getElementById("visualDisplay") as HTMLSelectElem
 const generalNotice = document.getElementById("generalNotice");
 const allowNotice = document.getElementById("allowNotice");
 const blockNotice = document.getElementById("blockNotice");
+const modeSummaryTitle = document.getElementById("modeSummaryTitle");
+const modeSummaryBody = document.getElementById("modeSummaryBody");
+const listModeHint = document.getElementById("listModeHint");
 
 const tableBodies: Record<ListType, HTMLTableSectionElement> = {
   allowlist: document.querySelector("#allowlistTable tbody") as HTMLTableSectionElement,
@@ -135,6 +138,22 @@ const syncGeneralForm = (): void => {
   blockByDefaultInput.checked = state.blockAllComments;
   blockByListInput.checked = !state.blockAllComments;
   visualDisplay.value = state.display;
+
+  if (modeSummaryTitle && modeSummaryBody && listModeHint) {
+    if (state.blockAllComments) {
+      modeSummaryTitle.textContent = "Block everywhere except allowed pages";
+      modeSummaryBody.textContent =
+        "NoComment will hide comments by default. Anything in your Allow List becomes an exception.";
+      listModeHint.textContent =
+        "Allow List entries are active right now because you are using block-everywhere mode.";
+    } else {
+      modeSummaryTitle.textContent = "Block only listed sites";
+      modeSummaryBody.textContent =
+        "NoComment will leave comments visible unless a page matches your Block List.";
+      listModeHint.textContent =
+        "Block List entries are active right now because you are using block-only mode.";
+    }
+  }
 };
 
 const promptForEntry = (currentValue = ""): string | null => {
@@ -270,6 +289,13 @@ document.addEventListener("click", (event) => {
 
 document.getElementById("saveSettings")?.addEventListener("click", () => {
   void saveGeneralSettings();
+});
+
+[blockByDefaultInput, blockByListInput].forEach((input) => {
+  input.addEventListener("change", () => {
+    state.blockAllComments = blockByDefaultInput.checked;
+    syncGeneralForm();
+  });
 });
 
 Object.entries(listInputs).forEach(([listType, input]) => {

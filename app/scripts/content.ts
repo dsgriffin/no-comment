@@ -16,11 +16,19 @@ const SITE_SELECTOR_RULES: readonly SiteSelectorRule[] = [
   },
   {
     hostnames: ["x.com", "twitter.com", "www.x.com", "www.twitter.com"],
-    selectors: ["[data-testid='primaryColumn'] [aria-label*='Timeline: Conversation']", "[data-testid='cellInnerDiv'] article [role='group']"],
+    selectors: [
+      "section[role='region'] [aria-label='Timeline: Conversation']",
+      "section[role='region'] [aria-label='Timeline: Conversation'] [data-testid='cellInnerDiv'] article[data-testid='tweet']",
+    ],
   },
   {
     hostnames: ["facebook.com", "www.facebook.com", "m.facebook.com"],
-    selectors: ["[aria-label='Comment'] [role='article']", "[data-pagelet^='FeedUnit'] [aria-label='Comments']"],
+    selectors: [
+      "[aria-label^='Comment by']",
+      "[role='dialog'] [aria-label^='Comment by']",
+      "[data-pagelet^='FeedUnit'] [aria-label='Comments']",
+      "[aria-label='Leave a comment']",
+    ],
   },
   {
     hostnames: ["instagram.com", "www.instagram.com"],
@@ -109,7 +117,7 @@ const patternToRegex = (pattern: string): RegExp | null => {
     return null;
   }
 
-  const escaped = escapeRegex(normalized).replace(/\\\*/g, ".*");
+  const escaped = escapeRegex(normalized).replace(/\*/g, ".*");
 
   return new RegExp(`^${escaped}/?$`, "i");
 };
