@@ -149,6 +149,10 @@ code {
   gap: 18px;
 }
 
+.panel[hidden] {
+  display: none !important;
+}
+
 .card {
   border: 1px solid var(--line);
   border-radius: 28px;
