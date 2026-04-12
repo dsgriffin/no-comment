@@ -17,7 +17,6 @@ const SITE_SELECTOR_RULES: readonly SiteSelectorRule[] = [
   {
     hostnames: ["x.com", "twitter.com", "www.x.com", "www.twitter.com"],
     selectors: [
-      "section[role='region'] [aria-label='Timeline: Conversation']",
       "section[role='region'] [aria-label='Timeline: Conversation'] [data-testid='cellInnerDiv'] article[data-testid='tweet']",
     ],
   },
@@ -160,6 +159,25 @@ const isVisibleNode = (element: HTMLElement): boolean => {
 const dedupeNestedElements = (elements: HTMLElement[]): HTMLElement[] =>
   elements.filter((element) => !elements.some((candidate) => candidate !== element && candidate.contains(element)));
 
+const filterSiteSpecificMatches = (elements: HTMLElement[]): HTMLElement[] => {
+  const hostname = window.location.hostname.toLowerCase();
+  const path = window.location.pathname;
+
+  if (
+    (hostname === "x.com" || hostname === "www.x.com" || hostname === "twitter.com" || hostname === "www.twitter.com") &&
+    /\/status\//.test(path)
+  ) {
+    const tweetArticles = elements.filter((element) => element.matches("article[data-testid='tweet']"));
+
+    if (tweetArticles.length > 0) {
+      const rootTweet = tweetArticles[0];
+      return elements.filter((element) => element !== rootTweet);
+    }
+  }
+
+  return elements;
+};
+
 const getCommentElements = (includeHidden = false): HTMLElement[] => {
   const selectors = getActiveSelectors();
   const matches = selectors.flatMap((selector) =>
@@ -169,7 +187,7 @@ const getCommentElements = (includeHidden = false): HTMLElement[] => {
   );
 
   const uniqueMatches = Array.from(new Set(matches));
-  const dedupedMatches = dedupeNestedElements(uniqueMatches);
+  const dedupedMatches = filterSiteSpecificMatches(dedupeNestedElements(uniqueMatches));
 
   return includeHidden ? dedupedMatches : dedupedMatches.filter(isVisibleNode);
 };
