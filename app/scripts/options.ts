@@ -1,227 +1,286 @@
-import "jquery-ui";
-import "datatables";
-import { UserSettings } from "./interfaces";
+import { CommentDisplayMode, UserSettings } from "./interfaces";
 
-// SET jQuery UI options display
-$('#radio').buttonset();
+type ListType = "allowlist" | "blocklist";
 
-// @ts-ignore
-$('#visualDisplay').selectmenu({ 'width': 'auto' });
-
-$('#saveSettings, #saveAllowList, #saveBlockList').button({ icons: { 'primary': 'ui-icon-locked' } }).css('width', '240px');
-
-$('[data-list="addNew"]').button({ icons: { 'primary': 'ui-icon-plus' } });
-$('[data-list="modifySelected"]').button({ icons: { 'primary': 'ui-icon-gear' } });
-$('[data-list="removeSelected"]').button({ icons: { 'primary': 'ui-icon-minus' } });
-$('[data-list="removeAll"]').button({ icons: { 'primary': 'ui-icon-close' } });
-
-// SET Allow List and Block List DataTables initialisation/customization.
-$('#allowlist, #blocklist').DataTable({ 'scrollY': '200px', 'paging': false, 'jQueryUI': true });
-
-$('div.accordion').accordion({ heightStyle: 'content', collapsible: false });
-
-chrome.storage.sync.get({
+const DEFAULT_SETTINGS: UserSettings = {
   blockAllComments: false,
-  display: 'collapse',
+  display: "collapse",
   allowlist: [],
-  blocklist: []
-}, (optionsStorage: UserSettings): void => {
-  // SET: Data of both lists + options panel settings.
-  let allowlist = $('#allowlist').DataTable();
-  let blocklist = $('#blocklist').DataTable();
+  blocklist: [],
+};
+const STORAGE_DEFAULTS = {
+  blockAllComments: false,
+  display: "collapse",
+  allowlist: [] as string[],
+  blocklist: [] as string[],
+};
 
-  for (let i of optionsStorage.allowlist.keys()) {
-    allowlist.row.add(optionsStorage.allowlist[i]);
+const state: UserSettings = { ...DEFAULT_SETTINGS };
+const selectedRows: Record<ListType, number | null> = {
+  allowlist: null,
+  blocklist: null,
+};
+
+const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-tab-target]"));
+const tabPanels = Array.from(document.querySelectorAll<HTMLElement>("[data-tab-panel]"));
+
+const blockByDefaultInput = document.getElementById("blockByDefault") as HTMLInputElement;
+const blockByListInput = document.getElementById("blockByList") as HTMLInputElement;
+const visualDisplay = document.getElementById("visualDisplay") as HTMLSelectElement;
+
+const generalNotice = document.getElementById("generalNotice");
+const allowNotice = document.getElementById("allowNotice");
+const blockNotice = document.getElementById("blockNotice");
+
+const tableBodies: Record<ListType, HTMLTableSectionElement> = {
+  allowlist: document.querySelector("#allowlistTable tbody") as HTMLTableSectionElement,
+  blocklist: document.querySelector("#blocklistTable tbody") as HTMLTableSectionElement,
+};
+const listInputs: Record<ListType, HTMLInputElement> = {
+  allowlist: document.getElementById("allowlistInput") as HTMLInputElement,
+  blocklist: document.getElementById("blocklistInput") as HTMLInputElement,
+};
+
+const normalizeEntry = (value: string): string => value.trim().replace(/\s+/g, "");
+
+const showNotice = (element: HTMLElement | null, message: string): void => {
+  if (!element) {
+    return;
   }
-  for (let i of optionsStorage.blocklist.keys()) {
-    blocklist.row.add(optionsStorage.blocklist[i]);
+
+  element.textContent = message;
+  element.hidden = false;
+
+  window.setTimeout(() => {
+    element.hidden = true;
+  }, 3000);
+};
+
+const setActiveTab = async (tabName: string): Promise<void> => {
+  tabButtons.forEach((button) => {
+    const isActive = button.dataset.tabTarget === tabName;
+    button.dataset.active = String(isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+
+  tabPanels.forEach((panel) => {
+    panel.hidden = panel.dataset.tabPanel !== tabName;
+  });
+
+  await chrome.storage.local.set({ currentTab: tabName });
+};
+
+const renderList = (listType: ListType): void => {
+  const tbody = tableBodies[listType];
+  const values = state[listType];
+
+  tbody.innerHTML = "";
+
+  if (selectedRows[listType] !== null && selectedRows[listType]! >= values.length) {
+    selectedRows[listType] = null;
   }
 
-  allowlist.draw();
-  blocklist.draw();
+  values.forEach((value, index) => {
+    const row = document.createElement("tr");
+    row.dataset.index = String(index);
+    row.dataset.selected = String(selectedRows[listType] === index);
 
-  $('#radio1').prop('checked', !optionsStorage.blockAllComments).button('refresh');
-  $('#radio2').prop('checked', optionsStorage.blockAllComments).button('refresh');
-  $('#visualDisplay').val(optionsStorage.display).selectmenu('refresh');
+    const valueCell = document.createElement("td");
+    valueCell.textContent = value;
+
+    const actionCell = document.createElement("td");
+    actionCell.className = "rowActions";
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.textContent = "Edit";
+    editButton.dataset.action = "edit";
+    editButton.dataset.listType = listType;
+    editButton.dataset.index = String(index);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete";
+    deleteButton.dataset.action = "delete";
+    deleteButton.dataset.listType = listType;
+    deleteButton.dataset.index = String(index);
+
+    actionCell.append(editButton, deleteButton);
+    row.append(valueCell, actionCell);
+
+    row.addEventListener("click", (event) => {
+      if ((event.target as HTMLElement).closest("button")) {
+        return;
+      }
+
+      selectedRows[listType] = selectedRows[listType] === index ? null : index;
+      renderList(listType);
+    });
+
+    tbody.append(row);
+  });
+
+  if (values.length === 0) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 2;
+    emptyCell.className = "emptyState";
+    emptyCell.textContent = "No patterns saved yet.";
+    emptyRow.append(emptyCell);
+    tbody.append(emptyRow);
+  }
+};
+
+const syncGeneralForm = (): void => {
+  blockByDefaultInput.checked = state.blockAllComments;
+  blockByListInput.checked = !state.blockAllComments;
+  visualDisplay.value = state.display;
+};
+
+const promptForEntry = (currentValue = ""): string | null => {
+  const nextValue = window.prompt("Update the selected URL or pattern:", currentValue);
+
+  if (nextValue === null) {
+    return null;
+  }
+
+  const normalized = normalizeEntry(nextValue);
+  return normalized || null;
+};
+
+const addListItem = (listType: ListType): void => {
+  const nextValue = normalizeEntry(listInputs[listType].value);
+
+  if (!nextValue) {
+    return;
+  }
+
+  state[listType] = Array.from(new Set([...state[listType], nextValue]));
+  listInputs[listType].value = "";
+  renderList(listType);
+};
+
+const editListItem = (listType: ListType, index: number): void => {
+  const existingValue = state[listType][index];
+
+  if (!existingValue) {
+    return;
+  }
+
+  const nextValue = promptForEntry(existingValue);
+
+  if (!nextValue) {
+    return;
+  }
+
+  state[listType][index] = nextValue;
+  state[listType] = Array.from(new Set(state[listType]));
+  selectedRows[listType] = null;
+  renderList(listType);
+};
+
+const deleteListItem = (listType: ListType, index: number): void => {
+  state[listType] = state[listType].filter((_, currentIndex) => currentIndex !== index);
+  selectedRows[listType] = null;
+  renderList(listType);
+};
+
+const clearList = (listType: ListType): void => {
+  if (state[listType].length === 0) {
+    return;
+  }
+
+  const confirmed = window.confirm(`Remove every entry in the ${listType === "allowlist" ? "Allow List" : "Block List"}?`);
+
+  if (!confirmed) {
+    return;
+  }
+
+  state[listType] = [];
+  selectedRows[listType] = null;
+  renderList(listType);
+};
+
+const saveList = async (listType: ListType): Promise<void> => {
+  await chrome.storage.sync.set({ [listType]: state[listType] });
+  showNotice(listType === "allowlist" ? allowNotice : blockNotice, "Saved.");
+};
+
+const saveGeneralSettings = async (): Promise<void> => {
+  state.blockAllComments = blockByDefaultInput.checked;
+  state.display = visualDisplay.value as CommentDisplayMode;
+
+  await chrome.storage.sync.set({
+    blockAllComments: state.blockAllComments,
+    display: state.display,
+  });
+
+  showNotice(generalNotice, "Saved.");
+};
+
+const loadSettings = async (): Promise<void> => {
+  const stored = await chrome.storage.sync.get(STORAGE_DEFAULTS);
+
+  state.blockAllComments = Boolean(stored.blockAllComments);
+  state.display = stored.display === "hidden" ? "hidden" : "collapse";
+  state.allowlist = Array.isArray(stored.allowlist) ? stored.allowlist.map(String) : [];
+  state.blocklist = Array.isArray(stored.blocklist) ? stored.blocklist.map(String) : [];
+
+  syncGeneralForm();
+  renderList("allowlist");
+  renderList("blocklist");
+
+  const { currentTab = "general" } = await chrome.storage.local.get({ currentTab: "general" });
+  await setActiveTab(String(currentTab));
+};
+
+document.addEventListener("click", (event) => {
+  const target = event.target as HTMLElement;
+  const button = target.closest<HTMLButtonElement>("button[data-action]");
+
+  if (!button) {
+    return;
+  }
+
+  const action = button.dataset.action;
+  const listType = button.dataset.listType as ListType | undefined;
+  const index = Number(button.dataset.index);
+
+  if (action === "tab" && button.dataset.tabTarget) {
+    void setActiveTab(button.dataset.tabTarget);
+    return;
+  }
+
+  if (!listType) {
+    return;
+  }
+
+  if (action === "add") {
+    addListItem(listType);
+  } else if (action === "edit") {
+    editListItem(listType, Number.isNaN(index) ? selectedRows[listType] ?? -1 : index);
+  } else if (action === "delete") {
+    deleteListItem(listType, index);
+  } else if (action === "clear") {
+    clearList(listType);
+  } else if (action === "save-list") {
+    void saveList(listType);
+  }
 });
 
-// GET user-related extension storage preferences.
-// Add vertical tabs class.
-chrome.storage.local.get('currentTabIndex', function (obj) {
-  $('#tabs').tabs({
-    active: obj.currentTabIndex,
-    activate: (event, ui) => {
-      $('#allowlist').DataTable().columns.adjust();
-      $('#blocklist').DataTable().columns.adjust();
+document.getElementById("saveSettings")?.addEventListener("click", () => {
+  void saveGeneralSettings();
+});
 
-      chrome.storage.local.set({ 'currentTabIndex': ui.newPanel[0].dataset.tabIndex });
+Object.entries(listInputs).forEach(([listType, input]) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
     }
-  }).addClass('ui-tabs-vertical ui-helper-clearfix');
-});
 
-// When a row is selected, adjust option buttons as appropriate.
-$('#allowlist tbody, #blocklist tbody').on('click', 'tr', function () {
-  $(this).toggleClass('selected');
-  $('[data-list="modifySelected"][data-list-type=' + $(this).closest('table').attr('id') + ']').button('option', 'disabled', $(this).closest('table').find('.selected').length !== 1);
-  $('[data-list="removeSelected"][data-list-type=' + $(this).closest('table').attr('id') + ']').button('option', 'disabled', $(this).closest('table').find('.selected').length !== 1);
-});
-
-// SET: When the user saves their general settings, send these settings off to storage for later retrieval.
-$('#saveSettings').on('click', function () {
-  chrome.storage.sync.set({
-    'blockAllComments': $('#radio1').prop('checked'),
-    'display': $('#visualDisplay').val()
-  }, () => {
-    // Update status to let user know options were saved.
-    $(this).next('h5.notification-alert').text('Your settings have been saved successfully.');
-    $(this).next('h5.notification-alert').slideDown(1000).delay(4000).slideUp(1000, () => {
-      $(this).next('h5.notification-alert').text('');
-    });
+    event.preventDefault();
+    addListItem(listType as ListType);
   });
 });
 
-// SET: When the user saves their Allow List, send these settings off to storage for later retrieval.
-$('#saveAllowList').on('click', function () {
-  const allowlist = [];
-
-  $('#allowlist').DataTable().rows().data().each(function (value, index) {
-    allowlist[index] = value;
-  });
-
-  chrome.storage.sync.set({ 'allowlist': allowlist }, () => {
-    $(this).next('h5.notification-alert').text('Your Allow List has been saved successfully.');
-    $(this).next('h5.notification-alert').slideDown(1000).delay(4000).slideUp(1000, () => {
-      $(this).next('h5.notification-alert').text('');
-    });
-  });
-});
-
-// SET: When the user saves their Block List, send these settings off to storage for later retrieval.
-$('#saveBlockList').on('click', function () {
-  const blocklist = [];
-
-  $('#blocklist').DataTable().rows().data().each(function (value, index) {
-    blocklist[index] = value;
-  });
-
-  chrome.storage.sync.set({ 'blocklist': blocklist }, () => {
-    $(this).next('h5.notification-alert').text('Your Block List has been saved successfully.');
-    $(this).next('h5.notification-alert').slideDown(1000).delay(4000).slideUp(1000, () => {
-      $(this).next('h5.notification-alert').text('');
-    });
-  });
-});
-
-// SET: When the user saves a new list entry, process this.
-$('[data-list="addNew"]').on('click', function () {
-  const listType = ($(this).data('listType') === 'allowlist') ? 'Allow List' : 'Block List';
-
-  $('<div></div>')
-    .append(`<p>Enter a valid URL/URL pattern:</p>
-             <input type="url" id="newListItem" class="ui-corner-all" style="width:240px;" placeholder="www.example.com"/>`)
-    .dialog({
-      modal: true,
-      title: `Add new URL/URL pattern to ${listType}`,
-      buttons:
-        [{
-          text: 'Add New',
-          icons: { primary: 'ui-icon-circle-check' },
-          click: function () {
-            $('#' + listType.replace(/\s/g, '').toLowerCase()).DataTable().row.add([$('#newListItem').val()]).draw();
-            $(this).dialog('destroy');
-          }
-        },
-        {
-          text: 'Cancel',
-          icons: { primary: 'ui-icon-closethick' },
-          click: function () { $(this).dialog('destroy'); }
-        }],
-      // @ts-ignore
-      maxWidth: 'auto',
-    });
-});
-
-// SET: When the user modifies a list entry, process this.
-$('[data-list="modifySelected"]').on('click', function () {
-  const listType = ($(this).data('listType') === 'allowlist') ? 'Allow List' : 'Block List';
-
-  let selectedRow = $('#' + listType.replace(/\s/g, '').toLowerCase()).DataTable().row('tr.selected:first');
-
-  $('<div></div>')
-    .append(`<p>Modify the entry below:</p>
-             <input type="url" id="modifiedItem" class="ui-corner-all" style="width:240px;" value="${selectedRow.data()[0]}"/>`)
-    .dialog({
-      modal: true,
-      title: `Modify ${listType} entry`,
-      buttons:
-        [{
-          text: 'Save Changes',
-          icons: { primary: 'ui-icon-circle-check' },
-          click: function () {
-            selectedRow.data([$('#modifiedItem').val()]);
-            $(this).dialog('destroy');
-          }
-        },
-        {
-          text: 'Cancel',
-          icons: { primary: 'ui-icon-closethick' },
-          click: function () { $(this).dialog('destroy'); }
-        }]
-    });
-});
-
-// SET: When the user deletes a list entry/entries, process this.
-$('[data-list="removeSelected"]').on('click', function () {
-  const listType = ($(this).data('listType') === 'allowlist') ? 'Allow List' : 'Block List';
-
-  let selectedRows = $('#' + listType.replace(/\s/g, '').toLowerCase()).DataTable().rows('tr.selected');
-
-  $('<div></div>')
-    .append('<p>Are you sure you want to remove the selected ' + listType + ' entry/entries?</p>')
-    .dialog({
-      modal: true,
-      title: `Remove ${listType} entry`,
-      buttons:
-        [{
-          text: 'Remove',
-          icons: { primary: 'ui-icon-alert' },
-          click: function () {
-            selectedRows.remove().draw();
-            $(this).dialog('destroy');
-          }
-        },
-        {
-          text: 'Cancel',
-          icons: { primary: 'ui-icon-closethick' },
-          click: function () { $(this).dialog('destroy'); }
-        }]
-    });
-});
-
-// SET: When the user removes all list entries, process this.
-$('[data-list="removeAll"]').on('click', function () {
-  const listType = ($(this).data('listType') === 'allowlist') ? 'Allow List' : 'Block List';
-
-  let allRows = $('#' + listType.replace(/\s/g, '').toLowerCase()).DataTable().rows();
-
-  $('<div></div>')
-    .append('<p>Are you sure you want to remove all entries in the ' + listType + '?</p>')
-    .dialog({
-      modal: true,
-      title: `Remove all ${listType} entries`,
-      buttons:
-        [{
-          text: 'Remove All',
-          icons: { primary: 'ui-icon-alert' },
-          click: function () {
-            allRows.clear().draw();
-            $(this).dialog('destroy');
-          }
-        },
-        {
-          text: 'Cancel',
-          icons: { primary: 'ui-icon-closethick' },
-          click: function () { $(this).dialog('destroy'); }
-        }]
-    });
-});
+void loadSettings();

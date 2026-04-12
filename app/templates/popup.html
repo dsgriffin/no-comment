@@ -1,23 +1,19 @@
 <!doctype html>
-<html>
-
-<head>
-  <title>NoComment</title>
-  <link rel="stylesheet" href="popup.css" />
-</head>
-
-<body>
-  <header>
-    <h2>NoComment</h2>
-  </header>
-  <article>
-    <p>NoComment is currently attempting to block comment(s) on this page.</p>
-    <p>If you'd like to modify the extension settings, please click on the link below:</p>
-  </article>
-  <footer>
-    <a href="#" id="options">Options/Settings</a>
-  </footer>
-  <script src="popup.js"></script>
-</body>
-
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NoComment</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popupShell">
+      <p class="eyebrow">NoComment</p>
+      <h1 id="statusHeading">Checking this page</h1>
+      <p id="statusBody">Loading the current tab state.</p>
+      <p id="pageDetails" class="pageDetails"></p>
+      <button type="button" id="options">Open settings</button>
+    </main>
+    <script src="popup.js"></script>
+  </body>
 </html>

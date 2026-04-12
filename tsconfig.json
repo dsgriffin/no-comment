@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "target": "es6",
-    "lib": ["es6", "dom"]
+    "lib": ["dom", "es2022"],
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "target": "es2022"
   }
 }

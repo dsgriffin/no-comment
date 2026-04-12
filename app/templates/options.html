@@ -2,196 +2,145 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>NoComment - Options</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NoComment Settings</title>
     <link rel="stylesheet" href="options.css" />
     <link rel="icon" href="favicon.png" />
   </head>
-
   <body>
-    <header id="optionsHeader">
-      <img src="icon-128.png" alt="NoComment Extension Icon" />
-      <h1>NoComment</h1>
-      <h4>Extension Settings</h4>
-    </header>
+    <main class="pageShell">
+      <header class="hero">
+        <img src="icon-128.png" alt="NoComment icon" class="heroIcon" />
+        <div>
+          <p class="eyebrow">Chrome Extension</p>
+          <h1>NoComment</h1>
+          <p class="heroCopy">Modernized controls for deciding where comment sections stay visible and how they disappear.</p>
+        </div>
+      </header>
 
-    <div id="tabs">
-      <nav>
-        <ul>
-          <li><a href="#tabs-1">General Settings</a></li>
-          <li><a href="#tabs-2">Block List/Allow List</a></li>
-          <li><a href="#tabs-3">About/How To Use</a></li>
-        </ul>
+      <nav class="tabs" aria-label="Settings sections">
+        <button type="button" data-action="tab" data-tab-target="general" aria-selected="true">General</button>
+        <button type="button" data-action="tab" data-tab-target="lists" aria-selected="false">Rules</button>
+        <button type="button" data-action="tab" data-tab-target="about" aria-selected="false">About</button>
       </nav>
 
-      <article id="tabs-1" data-tab-index="0">
-        <h4>Block all comments by default?</h4>
+      <section class="panel" data-tab-panel="general">
+        <div class="card">
+          <h2>Default behaviour</h2>
+          <p>Choose whether NoComment blocks comment sections everywhere by default, or only on sites you add to the Block List.</p>
 
-        <section id="radio">
-          <div>
-            <input type="radio" id="radio1" name="radio" value="no" />
-            <label for="radio1" class="ui-corner-all">No (except Block List)</label>
-          </div>
-
-          <div>
-            <input type="radio" id="radio2" name="radio" value="yes" />
-            <label for="radio2" class="ui-corner-all">Yes (except Allow List)</label>
-          </div>
-        </section>
-
-        <h4>How should the comment section be displayed?</h4>
-
-        <section>
-          <select id="visualDisplay">
-            <option value="collapse">Collapse comment section (take up no space)</option>
-            <option value="hidden">Visibility hidden (hide section but keep usual space)</option>
-          </select>
-        </section>
-
-        <h5 class="notification">Remember to save your general settings below</h5>
-
-        <section>
-          <button type="button" id="saveSettings">Save General Settings</button>
-          <h5 class="notification-alert">
-            <!--  Generated -->
-          </h5>
-        </section>
-      </article>
-
-      <article id="tabs-2" data-tab-index="1">
-        <section>
-          <h4>URL/URL pattern syntax (important!):</h4>
-
-          <p>1. The wildcard selector <strong>*</strong> can be used to match anything/everything, depending on where you use it.</p>
-          
-          <p>2. If the URL/URL pattern you want to target includes a prefix such as <strong>www.</strong> (e.g. <strong>www.example.com</strong>),
-            then <strong>you need to include this prefix</strong>.</p>
-
-          <p>YouTube example: <strong>www.youtube.com/*</strong> targets all YouTube videos.</p> 
-          <p>X example: <strong>x.com/*/status/*</strong> targets all X statuses.</p> 
-          <p>Reddit example: <strong>www.reddit.com/r/news/*</strong> targets any posts under the r/news subreddit.</p>
-        </section>
-
-        <section class="userlist">
-          <header>
-            <h2>Block List</h2>
-          </header>
-
-          <table id="blocklist">
-            <thead>
-              <tr>
-                <th>URL/URL Pattern</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- User generated data -->
-            </tbody>
-          </table>
-        </section>
-
-        <section class="listButtons">
-          <button type="button" data-list="addNew" data-list-type="blocklist">Add New</button>
-          <button type="button" data-list="modifySelected" data-list-type="blocklist" disabled="disabled">Modify Selected</button>
-          <button type="button" data-list="removeSelected" data-list-type="blocklist" disabled="disabled">Remove Selected</button>
-          <button type="button" data-list="removeAll" data-list-type="blocklist">Remove All</button>
-        </section>
-        
-        <section class="listButtonsSubmit">
-          <h5 class="notification">Remember to save any Block list changes below</h5>
-          <button type="button" id="saveBlockList">Save Block list Settings</button>
-          <h5 class="notification-alert">
-            <!--  Generated -->
-          </h5>
-        </section>
-
-        <section class="userlist">
-          <header>
-            <h2>Allow List</h2>
-          </header>
-          
-          <table id="allowlist">
-            <thead>
-              <tr>
-                <th>URL/URL Pattern</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- User generated data -->
-            </tbody>
-          </table>
-        </section>
-
-        <section class="listButtons">
-          <button type="button" data-list="addNew" data-list-type="allowlist">Add New</button>
-          <button type="button" data-list="modifySelected" data-list-type="allowlist" disabled="disabled">Modify Selected</button>
-          <button type="button" data-list="removeSelected" data-list-type="allowlist" disabled="disabled">Remove Selected</button>
-          <button type="button" data-list="removeAll" data-list-type="allowlist">Remove All</button>
-        </section>
-
-        <section class="listButtonsSubmit">
-          <h5 class="notification">Remember to save any Allow List changes below</h5>
-          <button type="button" id="saveAllowList">Save Allow List Settings</button>
-          <h5 class="notification-alert">
-            <!--  Generated -->
-          </h5>
-        </section>
-      </article>
-
-      <article id="tabs-3" data-tab-index="2">
-        <div class="accordion">
-          <h4>About</h4>
-
-          <div>
-            <p>NoComment is a simple Chrome extension for hiding user-generated comments on the web.</p>
-            <p>I'd appreciate a rating in the Google store, along with any constructive criticism you have!</p>
-          </div>
-
-          <h4>Defaults & Settings</h4>
-
-          <div>
-            <p>On a fresh installation, NoComment does not block any comments; if you'd like to block comments on specific websites/routes only, you can add those websites/routes to your "Blocklist".</p>
-            <p>If you prefer to block comments on all sites by default, you can do that, and add websites/routes to your "Allowlist" instead.</p>
-            <p>You can even use the wildcard selector "*" to block or allow comments on specific "routes" of a website.</p>
-            <p>Examples:</p>
-            <p>www.youtube.com/*</p>
-            <p>x.com/*/status/* </p>
-            <p>www.reddit.com/r/news/*</p>
-            <p>The first example blocks/allows all YouTube videos, the second blocks/allows all X statuses, and the third specifically only blocks/allows comments on all Reddit posts in the r/news subreddit.</p>
-            <p>You're also able to change the way the comments are hidden; by default they are "collapsed" and remove the space taken originally like they never existed, but this can be changed to "hidden" if you'd like to keep the empty space the comments originally took.</p>
-          </div>
-
-          <h4>Bugs/Issues</h4>
-
-          <div>
-            <p>If you have major issues you'd like to report, feel free to <a href="https://github.com/dsgriffin/NoComment" target="blank">open up an issue</a>.</p>
-          </div>
-            
-          <h4>Donate</h4>
-
-          <div>
-            <p>If you'd like to make a donation (thank you!) you can send one via. <a href="https://paypal.me/dsgriffin" target="blank">paypal.me/dsgriffin</a></p>
-          </div>
-
-          <h4>Uninstall NoComment</h4>
-
-          <div>
-            <p>First, navigate to the Extensions menu; either type <code>chrome://extensions</code> into the address bar or go to <code>Chrome Menu > Tools > Extensions</code>.</p>
-            <p>Then, click the recycle bin icon that is next to the NoComment extension.</p>
-          </div>
-
-          <h4>Licensing/Contributing</h4>
-
-          <div>
-            <p>Extension License: MIT.</p>
-            <p>The NoComment GitHub repo can be found at: https://github.com/dsgriffin/NoComment.</p>
-            <p>If you decide to modify this extensions' code in any way, please ensure the license remains as MIT & a reference to my original project is made.</p>
+          <div class="choiceGrid">
+            <label class="choiceCard">
+              <input type="radio" id="blockByList" name="blockingMode" />
+              <span>Only block sites in my Block List</span>
+            </label>
+            <label class="choiceCard">
+              <input type="radio" id="blockByDefault" name="blockingMode" />
+              <span>Block comments everywhere except my Allow List</span>
+            </label>
           </div>
         </div>
-      </article>
-    </div>
 
-    <footer id="optionsFooter">
-      Copyright &copy; 2025 Daniel Griffin. This extension is maintained at <a href="https://github.com/dsgriffin/NoComment" target="blank">Github</a>.
-    </footer>
+        <div class="card">
+          <h2>Hide style</h2>
+          <label class="fieldLabel" for="visualDisplay">When comments are blocked:</label>
+          <select id="visualDisplay">
+            <option value="collapse">Collapse the section and remove its space</option>
+            <option value="hidden">Keep the layout space but hide the content</option>
+          </select>
+        </div>
+
+        <div class="actionRow">
+          <button type="button" id="saveSettings">Save general settings</button>
+          <p id="generalNotice" class="notice" hidden>Saved.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-tab-panel="lists" hidden>
+        <div class="card">
+          <h2>Pattern guide</h2>
+          <p>Add hostnames or route patterns. Wildcards with <code>*</code> are supported.</p>
+          <p><code>www.youtube.com/*</code></p>
+          <p><code>x.com/*/status/*</code></p>
+          <p><code>www.reddit.com/r/news/*</code></p>
+        </div>
+
+        <div class="listGrid">
+          <section class="card">
+            <div class="cardHeader">
+              <div>
+                <p class="eyebrow">Exceptions</p>
+                <h2>Allow List</h2>
+              </div>
+              <div class="inlineActions">
+                <button type="button" data-action="clear" data-list-type="allowlist">Clear all</button>
+                <button type="button" data-action="save-list" data-list-type="allowlist">Save</button>
+              </div>
+            </div>
+
+            <div class="listComposer">
+              <input type="text" id="allowlistInput" placeholder="www.example.com/*" />
+              <button type="button" data-action="add" data-list-type="allowlist">Add pattern</button>
+            </div>
+
+            <table id="allowlistTable">
+              <thead>
+                <tr>
+                  <th>Pattern</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p id="allowNotice" class="notice" hidden>Saved.</p>
+          </section>
+
+          <section class="card">
+            <div class="cardHeader">
+              <div>
+                <p class="eyebrow">Targets</p>
+                <h2>Block List</h2>
+              </div>
+              <div class="inlineActions">
+                <button type="button" data-action="clear" data-list-type="blocklist">Clear all</button>
+                <button type="button" data-action="save-list" data-list-type="blocklist">Save</button>
+              </div>
+            </div>
+
+            <div class="listComposer">
+              <input type="text" id="blocklistInput" placeholder="www.example.com/*" />
+              <button type="button" data-action="add" data-list-type="blocklist">Add pattern</button>
+            </div>
+
+            <table id="blocklistTable">
+              <thead>
+                <tr>
+                  <th>Pattern</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p id="blockNotice" class="notice" hidden>Saved.</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="panel" data-tab-panel="about" hidden>
+        <div class="card prose">
+          <h2>How it works</h2>
+          <p>NoComment scans each page for common comment containers and hides them according to your saved rules.</p>
+          <p>Use the Allow List when you block comments everywhere by default, or the Block List when you only want to target selected sites.</p>
+          <p>The extension popup shows whether the current page is being changed right now.</p>
+        </div>
+
+        <div class="card prose">
+          <h2>Project notes</h2>
+          <p>This refreshed version trims older UI dependencies, improves page-state handling, and keeps the extension focused on lightweight browser-native behavior.</p>
+          <p><a href="https://github.com/dsgriffin/NoComment" target="_blank" rel="noreferrer">View the project on GitHub</a></p>
+        </div>
+      </section>
+    </main>
 
     <script src="options.js"></script>
   </body>

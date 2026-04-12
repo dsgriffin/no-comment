@@ -1,15 +1,14 @@
 {
   "name": "nocomment",
-  "version": "2.0.0",
-  "description": "Block comments across websites on Chrome",
+  "version": "2.1.0",
+  "description": "Hide comment sections across websites on Chrome",
   "author": "Daniel Griffin <mail@dsgriffin.com>",
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.32",
-    "@types/jqueryui": "^1.12.23",
+    "@types/chrome": "^0.1.25",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "file-loader": "^6.2.0",
@@ -18,15 +17,5 @@
     "typescript": "^5.6.3",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
-  },
-  "dependencies": {
-    "@types/chrome": "0.0.280",
-    "@types/datatables.net": "^1.10.1",
-    "@types/filesystem": "0.0.36",
-    "@types/filewriter": "0.0.33",
-    "datatables": "^1.10.13",
-    "jquery": "^3.2.1",
-    "jquery-ui": "^1.12.1",
-    "jquery-ui-dist": "^1.12.1"
   }
 }

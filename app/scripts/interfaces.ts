@@ -1,23 +1,14 @@
+export type CommentDisplayMode = "collapse" | "hidden";
+
 export interface UserSettings {
-    blockAllComments: boolean,
-    display: string,
-    allowlist: [],
-    blocklist: []
-} 
-
-export interface CommentHandling {
-    getAll: NodeListOf<Element>,
-    hideAll: () => void
+  blockAllComments: boolean;
+  display: CommentDisplayMode;
+  allowlist: string[];
+  blocklist: string[];
 }
 
-export interface UrlHandling {
-    blockableContent: boolean,
-    checkProtocol: (urlString: string) => string
-}
-
-export interface DynamicContentHandling {
-    observeChanges: {
-        config: object,
-        mutations: MutationObserver
-    }
+export interface PageState {
+  blockableContent: boolean;
+  commentsLength: number;
+  isBlocking: boolean;
 }

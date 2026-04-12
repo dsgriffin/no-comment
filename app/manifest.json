@@ -1,8 +1,8 @@
 {
   "name": "NoComment",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "manifest_version": 3,
-  "description": "Block/hide comment sections across the web (social media, news articles, blogs etc).",
+  "description": "Block or hide comment sections across the web.",
   "icons": {
     "16": "icon-16.png",
     "32": "icon-32.png",
@@ -15,18 +15,12 @@
   },
   "content_scripts": [
     {
-      "js": [
-        "content.js"
-      ],
-      "matches": [
-        "*://*/*"
-      ]
+      "js": ["content.js"],
+      "matches": ["*://*/*"],
+      "run_at": "document_idle"
     }
   ],
   "options_page": "options.html",
-  "options_ui": {
-    "page": "options.html"
-  },
   "action": {
     "default_icon": {
       "19": "icon-19.png",
@@ -35,18 +29,5 @@
     "default_title": "NoComment",
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "activeTab",
-    "storage"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "128.png"
-      ],
-      "matches": [
-        "*://*/*"
-      ]
-    }
-  ]
+  "permissions": ["activeTab", "storage"]
 }

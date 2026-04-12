@@ -1,128 +1,285 @@
-import { UserSettings, CommentHandling, UrlHandling, DynamicContentHandling } from './interfaces';
+import { PageState, UserSettings } from "./interfaces";
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // The selector array - this can be expanded to target comments/comment sections on as many sites as possible.
-  const selectorArray: ReadonlyArray<string> = [
-    'body [id*="comment"]', 'body [class*="comment"]', '#disqus_thread', '[class*="replies-to"]',
-    'div[aria-label^="Comment by"]', '[data-testid="tweet"]:only-child'
-  ];
+interface SiteSelectorRule {
+  hostnames: readonly string[];
+  selectors: readonly string[];
+}
 
-  // The current URL (for allowlist/blocklist usage)
-  const currentURL: string = document.location.href;
+const SITE_SELECTOR_RULES: readonly SiteSelectorRule[] = [
+  {
+    hostnames: ["youtube.com", "www.youtube.com", "m.youtube.com"],
+    selectors: ["ytd-comments#comments", "ytd-engagement-panel-section-list-renderer[target-id='engagement-panel-comments-section']"],
+  },
+  {
+    hostnames: ["reddit.com", "www.reddit.com", "old.reddit.com"],
+    selectors: ["shreddit-comment-tree", "faceplate-comment-tree", "[data-testid='post-comment-list']", ".commentarea"],
+  },
+  {
+    hostnames: ["x.com", "twitter.com", "www.x.com", "www.twitter.com"],
+    selectors: ["[data-testid='primaryColumn'] [aria-label*='Timeline: Conversation']", "[data-testid='cellInnerDiv'] article [role='group']"],
+  },
+  {
+    hostnames: ["facebook.com", "www.facebook.com", "m.facebook.com"],
+    selectors: ["[aria-label='Comment'] [role='article']", "[data-pagelet^='FeedUnit'] [aria-label='Comments']"],
+  },
+  {
+    hostnames: ["instagram.com", "www.instagram.com"],
+    selectors: ["main article ul", "main article section ul"],
+  },
+  {
+    hostnames: ["news.ycombinator.com"],
+    selectors: ["tr.athing + tr .comment-tree", "tr.comtr"],
+  },
+  {
+    hostnames: ["tiktok.com", "www.tiktok.com"],
+    selectors: ["[data-e2e='comment-list']", "[class*='DivCommentListContainer']"],
+  },
+];
 
-  let userSettings: UserSettings = {
-    blockAllComments: request.blockAllComments,
-    display: request.display,
-    allowlist: request.allowlist,
-    blocklist: request.blocklist
+const GENERIC_COMMENT_SELECTORS: readonly string[] = [
+  "#disqus_thread",
+  "[data-testid='comments-container']",
+  "[data-testid='comment-list']",
+  "[data-testid='comment']",
+  "[id='comments']",
+  "[id='commentform']",
+  "[id^='comments-']",
+  "[class~='comments']",
+  "[class~='comment-list']",
+  "[class~='commentlist']",
+  "[class~='comment-thread']",
+  "[class~='comments-area']",
+  "[class~='comments-wrap']",
+  "[class~='disqus-thread']",
+  "[aria-label='Comments']",
+];
+
+const HIDDEN_FLAG = "data-nocomment-hidden";
+const ORIGINAL_DISPLAY = "data-nocomment-original-display";
+const ORIGINAL_VISIBILITY = "data-nocomment-original-visibility";
+const DEFAULT_SETTINGS: UserSettings = {
+  blockAllComments: false,
+  display: "collapse",
+  allowlist: [],
+  blocklist: [],
+};
+const STORAGE_DEFAULTS = {
+  blockAllComments: false,
+  display: "collapse",
+  allowlist: [] as string[],
+  blocklist: [] as string[],
+};
+
+let currentSettings: UserSettings = { ...DEFAULT_SETTINGS };
+let currentState: PageState = {
+  blockableContent: false,
+  commentsLength: 0,
+  isBlocking: false,
+};
+let observer: MutationObserver | null = null;
+let mutationFrame = 0;
+
+const getStorage = async (): Promise<UserSettings> => {
+  const stored = await chrome.storage.sync.get(STORAGE_DEFAULTS);
+
+  return {
+    blockAllComments: Boolean(stored.blockAllComments),
+    display: stored.display === "hidden" ? "hidden" : "collapse",
+    allowlist: Array.isArray(stored.allowlist) ? stored.allowlist.map(String) : [],
+    blocklist: Array.isArray(stored.blocklist) ? stored.blocklist.map(String) : [],
   };
+};
 
-  let comments: CommentHandling = {
-    'getAll': document.querySelectorAll(selectorArray.join()),
-    'hideAll': (): void => {
-      for (let i of Array.from(comments.getAll).keys()) {
-        if (userSettings.display === 'collapse') {
-          (<HTMLElement>comments.getAll[i]).style.display = 'none';
-        }
-        else if (userSettings.display === 'hidden') {
-          (<HTMLElement>comments.getAll[i]).style.visibility = 'hidden';
-        }
-      }
-    }
-  };
+const escapeRegex = (value: string): string => value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
 
-  let urlHandling: UrlHandling = {
-    blockableContent: false,
-    checkProtocol: (urlString: string): string => {
-      if (urlString.search(/^http[s]?\:\/\//) === -1) {
-        urlString = '*://' + urlString;
-      }
+const normalizePattern = (value: string): string => {
+  const trimmed = value.trim();
 
-      return urlString;
-    }
-  };
-
-  let dynamicContentHandling: DynamicContentHandling = {
-    'observeChanges': {
-      'config': {
-        attributes: true,
-        childList: true,
-        characterData: true,
-        subtree: true,
-        attributeFilter: ['id', 'class']
-      },
-      'mutations': new (<any>window).MutationObserver((): void => {
-        let matches = document.querySelectorAll(selectorArray.join());
-
-        for (let i of Array.from(matches).keys()) {
-          if ((<HTMLElement>matches[i]).style.display !== 'none') {
-            if (userSettings.display === 'collapse') { 
-              (<HTMLElement>matches[i]).style.display = 'none'; 
-            }
-            else if (userSettings.display === 'hidden') { 
-              (<HTMLElement>matches[i]).style.visibility = 'hidden'; 
-            }
-          }
-        }
-      })
-    }
+  if (!trimmed) {
+    return "";
   }
 
-  const isNotInAllowList = (): boolean => {
-    const allowlist: any = userSettings.allowlist;
+  return /^[a-z*]+:\/\//i.test(trimmed) ? trimmed : `*://${trimmed}`;
+};
 
-    for (let i of allowlist.keys()) {
-      let structuredURL: string = urlHandling.checkProtocol(allowlist[i].toString());
-      let regexURL: RegExp = new RegExp(structuredURL.replace(/\./g, '\\.').replace(/\*/g, '.+') + '/?$');
+const patternToRegex = (pattern: string): RegExp | null => {
+  const normalized = normalizePattern(pattern);
 
-      if (regexURL.test(currentURL)) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const isInBlockList = (): boolean => {
-    const blocklist: any = userSettings.blocklist;
-
-    for (let i of blocklist.keys()) {
-      let structuredURL: string = urlHandling.checkProtocol(blocklist[i].toString());
-      let regexURL: RegExp = new RegExp(structuredURL.replace(/\./g, '\\.').replace(/\*/g, '.+') + '/?$');
-
-      if (regexURL.test(currentURL)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  if (userSettings.blockAllComments) {
-    // If all comments are set to be blocked by default,
-    // Check whether the current URL is in Allow List and take appropriate action.
-    if (isNotInAllowList()) {
-      // It is necessary to show page action.
-      urlHandling.blockableContent = true;
-      // Observe any additional elements that match selectorArray
-      dynamicContentHandling.observeChanges.mutations.observe(document.body, dynamicContentHandling.observeChanges.config);
-      // This URL/URL pattern is not Allow List - loop through all comments on page and hide (depending on user visual setting).
-      comments.hideAll();
-    }
+  if (!normalized) {
+    return null;
   }
-  else {
-    if (isInBlockList()) {
-      // It is necessary to show page action.
-      urlHandling.blockableContent = true;
-      // Observe any additional elements that match selectorArray
-      dynamicContentHandling.observeChanges.mutations.observe(document.body, dynamicContentHandling.observeChanges.config);
-      // Current URL is in Block List - hide all comments.
-      comments.hideAll();
-    }
-  }
-  // Need to include whether or not the current page contains blockable content, so that the page action can be displayed.
-  sendResponse({ 
-    'blockableContent': urlHandling.blockableContent, 
-    'commentsLength': comments.getAll.length 
+
+  const escaped = escapeRegex(normalized).replace(/\\\*/g, ".*");
+
+  return new RegExp(`^${escaped}/?$`, "i");
+};
+
+const getComparableUrl = (): string => `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+
+const matchesRule = (rules: string[]): boolean => {
+  const currentUrl = getComparableUrl();
+
+  return rules.some((rule) => {
+    const regex = patternToRegex(rule);
+    return regex ? regex.test(currentUrl) : false;
   });
+};
+
+const hostnameMatches = (hostname: string, allowedHostnames: readonly string[]): boolean =>
+  allowedHostnames.some(
+    (allowedHostname) => hostname === allowedHostname || hostname.endsWith(`.${allowedHostname}`),
+  );
+
+const getActiveSelectors = (): readonly string[] => {
+  const hostname = window.location.hostname.toLowerCase();
+  const matchedRules = SITE_SELECTOR_RULES.filter((rule) => hostnameMatches(hostname, rule.hostnames));
+
+  if (matchedRules.length > 0) {
+    return matchedRules.flatMap((rule) => rule.selectors);
+  }
+
+  return GENERIC_COMMENT_SELECTORS;
+};
+
+const isVisibleNode = (element: HTMLElement): boolean => {
+  const rect = element.getBoundingClientRect();
+  const style = window.getComputedStyle(element);
+
+  return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+};
+
+const dedupeNestedElements = (elements: HTMLElement[]): HTMLElement[] =>
+  elements.filter((element) => !elements.some((candidate) => candidate !== element && candidate.contains(element)));
+
+const getCommentElements = (): HTMLElement[] => {
+  const selectors = getActiveSelectors();
+  const matches = selectors.flatMap((selector) =>
+    Array.from(document.querySelectorAll(selector)).filter(
+      (element): element is HTMLElement => element instanceof HTMLElement,
+    ),
+  );
+
+  const uniqueMatches = Array.from(new Set(matches));
+
+  return dedupeNestedElements(uniqueMatches).filter(isVisibleNode);
+};
+
+const hideElement = (element: HTMLElement): void => {
+  if (!element.hasAttribute(HIDDEN_FLAG)) {
+    element.setAttribute(HIDDEN_FLAG, "true");
+    element.setAttribute(ORIGINAL_DISPLAY, element.style.display);
+    element.setAttribute(ORIGINAL_VISIBILITY, element.style.visibility);
+  }
+
+  element.setAttribute("aria-hidden", "true");
+
+  if (currentSettings.display === "hidden") {
+    element.style.visibility = "hidden";
+  } else {
+    element.style.display = "none";
+  }
+};
+
+const restoreHiddenElements = (): void => {
+  const elements = document.querySelectorAll<HTMLElement>(`[${HIDDEN_FLAG}="true"]`);
+
+  elements.forEach((element) => {
+    element.style.display = element.getAttribute(ORIGINAL_DISPLAY) ?? "";
+    element.style.visibility = element.getAttribute(ORIGINAL_VISIBILITY) ?? "";
+    element.removeAttribute(HIDDEN_FLAG);
+    element.removeAttribute(ORIGINAL_DISPLAY);
+    element.removeAttribute(ORIGINAL_VISIBILITY);
+    element.removeAttribute("aria-hidden");
+  });
+};
+
+const updateObserver = (shouldObserve: boolean): void => {
+  if (shouldObserve && !observer) {
+    observer = new MutationObserver(() => {
+      if (!currentState.isBlocking || mutationFrame !== 0) {
+        return;
+      }
+
+      mutationFrame = window.requestAnimationFrame(() => {
+        mutationFrame = 0;
+        void applySettings();
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "id"],
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (!shouldObserve && observer) {
+    observer.disconnect();
+    observer = null;
+  }
+};
+
+const notifyPageState = (): void => {
+  void chrome.runtime.sendMessage({
+    type: "pageStateChanged",
+    state: currentState,
+  });
+};
+
+const applySettings = async (resetExisting = false): Promise<PageState> => {
+  if (resetExisting) {
+    restoreHiddenElements();
+  }
+
+  const comments = getCommentElements();
+  const shouldBlock = currentSettings.blockAllComments
+    ? !matchesRule(currentSettings.allowlist)
+    : matchesRule(currentSettings.blocklist);
+
+  if (shouldBlock) {
+    comments.forEach(hideElement);
+  }
+
+  currentState = {
+    blockableContent: comments.length > 0,
+    commentsLength: comments.length,
+    isBlocking: shouldBlock && comments.length > 0,
+  };
+
+  updateObserver(shouldBlock);
+  notifyPageState();
+
+  return currentState;
+};
+
+const refreshSettings = async (): Promise<PageState> => {
+  currentSettings = await getStorage();
+  return applySettings(true);
+};
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== "evaluatePage") {
+    return false;
+  }
+
+  void refreshSettings().then(sendResponse);
+  return true;
 });
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "sync") {
+    return;
+  }
+
+  if (
+    changes.blockAllComments ||
+    changes.display ||
+    changes.allowlist ||
+    changes.blocklist
+  ) {
+    void refreshSettings();
+  }
+});
+
+void refreshSettings();

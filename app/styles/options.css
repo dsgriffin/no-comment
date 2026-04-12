@@ -1,135 +1,312 @@
-@import "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css";
-@import "https://cdn.datatables.net/1.10.12/css/dataTables.jqueryui.min.css";
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  --bg: #efe8dc;
+  --bg-strong: #e5dbc8;
+  --panel: rgba(255, 250, 242, 0.92);
+  --ink: #182126;
+  --muted: #5b6770;
+  --accent: #c7602d;
+  --accent-dark: #8a3e18;
+  --line: rgba(24, 33, 38, 0.1);
+  --shadow: 0 20px 50px rgba(24, 33, 38, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
 
 html {
-  background-color: #F2F2F2;
-  width: 600px;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(199, 96, 45, 0.2), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-strong) 100%);
 }
 
 body {
-  background-color: #FFFFFF;
-  border: #88B7DA 2px solid;
-  border-radius: 20px;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-  font-size: 75%;
-  margin: 5px;
-  padding: 2% 6% 2% 4%;
-  text-align: left;
-  width: 88%;
+  margin: 0;
+  color: var(--ink);
 }
 
-section {
+body,
+button,
+select,
+input {
+  font: 16px/1.45 "Avenir Next", "Segoe UI", sans-serif;
+}
+
+button,
+select,
+input[type="text"] {
+  border-radius: 14px;
+}
+
+button {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 12px 16px;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(199, 96, 45, 0.3);
+  outline-offset: 2px;
+}
+
+select {
   width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 12px 14px;
 }
 
-/* Accordion */
-.ui-accordion {
-  width: 87%;
+input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 12px 14px;
 }
 
-#optionsHeader {
-  text-align: center;
+a {
+  color: var(--accent-dark);
 }
 
-#optionsHeader img {
-  width: 80px;
+code {
+  border-radius: 8px;
+  background: rgba(24, 33, 38, 0.06);
+  padding: 2px 6px;
 }
 
-#optionsFooter {
-  padding-top: 3%;
-  text-align: center;
+.pageShell {
+  width: min(1080px, calc(100vw - 32px));
+  margin: 24px auto;
+  padding-bottom: 24px;
 }
 
-button.changeSettings {
+.hero {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.heroIcon {
+  width: 120px;
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 0.95;
+}
+
+.heroCopy,
+.prose p {
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  background: rgba(255, 255, 255, 0.52);
+  color: var(--ink);
+}
+
+.tabs button[data-active="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.card p {
+  margin: 0 0 10px;
+}
+
+.choiceGrid {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.choiceCard {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  padding: 16px;
+}
+
+.choiceCard input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.fieldLabel {
   display: block;
-  margin-top: 2%;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
-#tabs-1 section {
-  padding: 1%;
-  text-align: center;
+.actionRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
-#tabs-1 input[type="radio"] {
-  display: none;
+.notice {
+  margin: 0;
+  color: var(--accent-dark);
+  font-weight: 700;
 }
 
-#tabs-1 label {
-  border-radius: 5px;
-  margin-top: 5px;
+.listGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
-#tabs-3 ul li {
-  margin: 10px 0;
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
-#tabs-3 section {
-  margin: 20px 0;
+.inlineActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-section.listButtons {
-  padding: 2%;
-  text-align: center;
+.listComposer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-section.listButtonsSubmit {
-  padding-bottom: 1%;
-  text-align: center;
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.notification {
-  color: red;
-  text-align: center;
+th,
+td {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
 }
 
-.notification-alert {
-  color: red;
-  display: none;
-  text-align: center;
+th:last-child,
+td:last-child {
+  width: 150px;
 }
 
-.userlist {
-  padding-top: 20px;
+tbody tr[data-selected="true"] td:first-child {
+  color: var(--accent-dark);
+  font-weight: 700;
 }
 
-.pattern-syntax-list {
-  height: 120px;
-  overflow: hidden;
-  overflow-y: scroll;
+.rowActions {
+  display: flex;
+  gap: 8px;
 }
 
-/* Vertical Tabs Layout - includes jQuery UI overrides */
-
-.ui-tabs-vertical .ui-widget-header {
-  background-position: top center;
+.rowActions button {
+  padding: 8px 12px;
 }
 
-.ui-tabs-vertical .ui-tabs-nav {
-  padding: 4px !important;
-  width: 98%;
+.emptyState {
+  color: var(--muted);
+  font-style: italic;
 }
 
-.ui-tabs-vertical .ui-tabs-nav li {
-  border-bottom-width: 1px !important;
-  border-radius: 5px;
-  border-right-width: 0 !important;
-  margin: 0 -1px .2em 20% !important;
-  width: 60%;
+.prose p:last-child {
+  margin-bottom: 0;
 }
 
-.ui-tabs-vertical .ui-tabs-nav li a {
-  display: block;
-  text-align: center;
-  outline: none;
-  width: 93%;
-}
+@media (max-width: 760px) {
+  .pageShell {
+    width: calc(100vw - 20px);
+    margin: 10px auto 20px;
+  }
 
-.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active {
-  border-right-width: 1px;
-  padding-bottom: 0;
-  padding-right: .1em;
-}
+  .hero {
+    grid-template-columns: 1fr;
+  }
 
-.ui-tabs-vertical .ui-tabs-panel {
-  padding: 1em;
+  .listGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader,
+  .actionRow,
+  .tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .listComposer {
+    grid-template-columns: 1fr;
+  }
+
+  th:last-child,
+  td:last-child {
+    width: auto;
+  }
+
+  .rowActions {
+    flex-wrap: wrap;
+  }
 }
