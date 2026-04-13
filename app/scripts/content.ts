@@ -122,7 +122,8 @@ const patternToRegex = (pattern: string): RegExp | null => {
   return new RegExp(`^${escaped}/?$`, "i");
 };
 
-const getComparableUrl = (): string => `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+const getComparableUrl = (): string =>
+  `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
 
 const matchesRule = (rules: string[]): boolean => {
   const currentUrl = getComparableUrl();

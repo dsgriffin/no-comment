@@ -29,8 +29,6 @@ const blockByListInput = document.getElementById("blockByList") as HTMLInputElem
 const visualDisplay = document.getElementById("visualDisplay") as HTMLSelectElement;
 
 const generalNotice = document.getElementById("generalNotice");
-const allowNotice = document.getElementById("allowNotice");
-const blockNotice = document.getElementById("blockNotice");
 const modeSummaryTitle = document.getElementById("modeSummaryTitle");
 const modeSummaryBody = document.getElementById("modeSummaryBody");
 const listModeHint = document.getElementById("listModeHint");
@@ -41,6 +39,10 @@ const saveHints: Record<ListType, HTMLElement | null> = {
 const isListDirty: Record<ListType, boolean> = {
   allowlist: false,
   blocklist: false,
+};
+const saveHintTimers: Record<ListType, number | null> = {
+  allowlist: null,
+  blocklist: null,
 };
 
 const tableBodies: Record<ListType, HTMLTableSectionElement> = {
@@ -67,11 +69,49 @@ const showNotice = (element: HTMLElement | null, message: string): void => {
   }, 3000);
 };
 
+const setSaveHintContent = (listType: ListType, mode: "dirty" | "saved"): void => {
+  const saveHint = saveHints[listType];
+
+  if (!saveHint) {
+    return;
+  }
+
+  if (mode === "saved") {
+    saveHint.innerHTML = "Saved.";
+    saveHint.dataset.state = "saved";
+    return;
+  }
+
+  saveHint.innerHTML = `
+    Changes here are not applied until you press the
+    <span class="inlineIconLabel">
+      <strong>Save button</strong>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path>
+      </svg>
+      <strong>above</strong>
+    </span>.
+  `;
+  saveHint.dataset.state = "dirty";
+};
+
 const syncDirtyState = (listType: ListType): void => {
   const saveHint = saveHints[listType];
 
-  if (saveHint) {
-    saveHint.hidden = !isListDirty[listType];
+  if (!saveHint) {
+    return;
+  }
+
+  if (saveHintTimers[listType] !== null) {
+    window.clearTimeout(saveHintTimers[listType]!);
+    saveHintTimers[listType] = null;
+  }
+
+  if (isListDirty[listType]) {
+    setSaveHintContent(listType, "dirty");
+    saveHint.hidden = false;
+  } else if (saveHint.dataset.state !== "saved") {
+    saveHint.hidden = true;
   }
 };
 
@@ -112,17 +152,31 @@ const renderList = (listType: ListType): void => {
 
     const editButton = document.createElement("button");
     editButton.type = "button";
-    editButton.textContent = "Edit";
+    editButton.className = "iconButton";
+    editButton.setAttribute("aria-label", "Edit pattern");
+    editButton.title = "Edit pattern";
     editButton.dataset.action = "edit";
     editButton.dataset.listType = listType;
     editButton.dataset.index = String(index);
+    editButton.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 17.25V20h2.75L17.81 8.94l-2.75-2.75L4 17.25zm14.71-9.04a1.003 1.003 0 0 0 0-1.42l-1.5-1.5a1.003 1.003 0 0 0-1.42 0l-1.17 1.17 2.75 2.75 1.34-1.34z"></path>
+      </svg>
+    `;
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
-    deleteButton.textContent = "Delete";
+    deleteButton.className = "iconButton";
+    deleteButton.setAttribute("aria-label", "Delete pattern");
+    deleteButton.title = "Delete pattern";
     deleteButton.dataset.action = "delete";
     deleteButton.dataset.listType = listType;
     deleteButton.dataset.index = String(index);
+    deleteButton.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2h4v2H4V6h4l1-2z"></path>
+      </svg>
+    `;
 
     actionCell.append(editButton, deleteButton);
     row.append(valueCell, actionCell);
@@ -247,8 +301,17 @@ const clearList = (listType: ListType): void => {
 const saveList = async (listType: ListType): Promise<void> => {
   await chrome.storage.sync.set({ [listType]: state[listType] });
   isListDirty[listType] = false;
-  syncDirtyState(listType);
-  showNotice(listType === "allowlist" ? allowNotice : blockNotice, "Saved.");
+  const saveHint = saveHints[listType];
+
+  if (saveHint) {
+    setSaveHintContent(listType, "saved");
+    saveHint.hidden = false;
+    saveHintTimers[listType] = window.setTimeout(() => {
+      saveHint.hidden = true;
+      saveHint.dataset.state = "";
+      saveHintTimers[listType] = null;
+    }, 2500);
+  }
 };
 
 const saveGeneralSettings = async (): Promise<void> => {

@@ -237,9 +237,10 @@ code {
 
 .inlineActions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 28px;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .saveHint {
@@ -250,6 +251,28 @@ code {
   color: var(--accent-dark);
   font-size: 14px;
   padding: 10px 12px;
+}
+
+.saveHint[data-state="saved"] {
+  background: rgba(62, 122, 72, 0.12);
+  border-color: rgba(62, 122, 72, 0.22);
+  color: #295a33;
+}
+
+.inlineIconLabel {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.inlineIconLabel svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  position: relative;
+  top: -1px;
 }
 
 .listComposer {
@@ -270,12 +293,12 @@ td {
   padding: 12px 0;
   border-top: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 th:last-child,
 td:last-child {
-  width: 120px;
+  width: 92px;
 }
 
 th:first-child,
@@ -295,13 +318,25 @@ tbody tr[data-selected="true"] td:first-child {
 .rowActions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
-.rowActions button {
-  padding: 8px 10px;
-  white-space: nowrap;
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+.iconButton svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
 }
 
 .emptyState {
