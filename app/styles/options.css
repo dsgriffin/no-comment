@@ -104,7 +104,6 @@ code {
 .heroIcon {
   width: 120px;
   border-radius: 28px;
-  box-shadow: var(--shadow);
 }
 
 .hero h1 {

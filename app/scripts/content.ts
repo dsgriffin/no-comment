@@ -289,12 +289,17 @@ const refreshSettings = async (): Promise<PageState> => {
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type !== "evaluatePage") {
+  if (message?.type === "getPageState") {
+    sendResponse(currentState);
     return false;
   }
 
-  void refreshSettings().then(sendResponse);
-  return true;
+  if (message?.type === "evaluatePage") {
+    void refreshSettings().then(sendResponse);
+    return true;
+  }
+
+  return false;
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {

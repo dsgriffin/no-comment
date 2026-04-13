@@ -1,6 +1,6 @@
 {
   "name": "nocomment",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Hide comment sections across websites on Chrome",
   "author": "Daniel Griffin <mail@dsgriffin.com>",
   "scripts": {

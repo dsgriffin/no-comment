@@ -29,7 +29,7 @@ const loadPopupState = async (): Promise<void> => {
 
   try {
     const response = (await chrome.tabs.sendMessage(tab.id, {
-      type: "evaluatePage",
+      type: "getPageState",
     })) as PageState;
 
     if (!response.blockableContent) {
