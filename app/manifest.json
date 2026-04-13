@@ -2,7 +2,7 @@
   "name": "NoComment",
   "version": "3.1.0",
   "manifest_version": 3,
-  "description": "Block or hide comment sections across the web.",
+  "description": "Hide/block comment sections across the web.",
   "icons": {
     "16": "icon-16.png",
     "32": "icon-32.png",
