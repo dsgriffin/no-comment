@@ -9,4 +9,4 @@ bower_components
 ./typings
 app/scripts/*.map
 test/libs
-
+.DS_Store
