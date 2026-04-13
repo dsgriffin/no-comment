@@ -1,220 +1,217 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NoComment Settings</title>
     <link rel="stylesheet" href="options.css" />
     <link rel="icon" href="favicon.png" />
-  </head>
-  <body>
+</head>
+
+<body>
     <main class="pageShell">
-      <header class="hero">
-        <img src="icon-128.png" alt="NoComment icon" class="heroIcon" />
-        <div>
-          <p class="eyebrow">Chrome Extension</p>
-          <h1>NoComment</h1>
-          <p class="heroCopy">Modernized controls for deciding where comment sections stay visible and how they disappear.</p>
-        </div>
-      </header>
+        <header class="hero">
+            <img src="icon-128.png" alt="NoComment icon" class="heroIcon" />
+            <div>
+                <p class="eyebrow">Chrome Extension</p>
+                <h1>NoComment</h1>
+                <p class="heroCopy">Modernized controls for deciding where comment sections stay visible and how they
+                    disappear.</p>
+            </div>
+        </header>
 
-      <nav class="tabs" aria-label="Settings sections">
-        <button type="button" data-action="tab" data-tab-target="general" aria-selected="true">General Rules</button>
-        <button type="button" data-action="tab" data-tab-target="lists" aria-selected="false">Blocklist/Allowlist</button>
-        <button type="button" data-action="tab" data-tab-target="about" aria-selected="false">About</button>
-      </nav>
+        <nav class="tabs" aria-label="Settings sections">
+            <button type="button" data-action="tab" data-tab-target="general" aria-selected="true">General
+                Rules</button>
+            <button type="button" data-action="tab" data-tab-target="lists"
+                aria-selected="false">Blocklist/Allowlist</button>
+            <button type="button" data-action="tab" data-tab-target="about" aria-selected="false">About</button>
+        </nav>
 
-      <section class="panel" data-tab-panel="general">
-        <div class="card statusCard">
-          <p class="eyebrow">Current mode</p>
-          <h2 id="modeSummaryTitle">Block only listed sites</h2>
-          <p id="modeSummaryBody">NoComment will leave comments visible unless a page matches your Block List.</p>
-        </div>
-
-        <div class="card">
-          <h2>Default behaviour</h2>
-          <p>Choose whether NoComment blocks comment sections everywhere by default, or only on sites you add to the Block List.</p>
-
-          <div class="choiceGrid">
-            <label class="choiceCard">
-              <input type="radio" id="blockByList" name="blockingMode" />
-              <span>Only block sites in my Block List</span>
-            </label>
-            <label class="choiceCard">
-              <input type="radio" id="blockByDefault" name="blockingMode" />
-              <span>Block comments everywhere except my Allow List</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Hide style</h2>
-          <label class="fieldLabel" for="visualDisplay">When comments are blocked:</label>
-          <select id="visualDisplay">
-            <option value="collapse">Collapse the section and remove its space</option>
-            <option value="hidden">Keep the layout space but hide the content</option>
-          </select>
-        </div>
-
-        <div class="actionRow">
-          <button type="button" id="saveSettings">Save general settings</button>
-          <p id="generalNotice" class="notice" hidden>Saved.</p>
-        </div>
-      </section>
-
-      <section class="panel" data-tab-panel="lists" hidden>
-        <div class="card">
-          <h2>Pattern guide</h2>
-          <p>Add hostnames or route patterns. Wildcards with <code>*</code> are supported and protocols are optional.</p>
-          <p><code>www.youtube.com/*</code> (all comments on all YouTube videos)</p>
-          <p><code>x.com/*/status/*</code> (all replies to all posts on X)</p>
-          <p><code>www.reddit.com/r/news/*</code> (all replies to any posts on Reddit inside the r/news subreddit)</p>
-          <p><code>https://www.facebook.com/zuck/posts/*</code> (all replies on any Facebook posts by Mark Zuckerberg)</p>
-          <p class="helperText" id="listModeHint">Block List entries are active right now because you are using block-only mode.</p>
-        </div>
-
-        <div class="listGrid">
-          <section class="card">
-            <div class="cardHeader">
-              <div>
-                <p class="eyebrow">Targets</p>
-                <h2>Block List</h2>
-                <p class="helperText">Use this when you only want to block specific pages or sites.</p>
-              </div>
-              <div class="inlineActions">
-                <button
-                  type="button"
-                  class="iconButton"
-                  data-action="clear"
-                  data-list-type="blocklist"
-                  aria-label="Clear all block list patterns"
-                  title="Clear all block list patterns"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2h4v2H4V6h4l1-2z"></path>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="iconButton"
-                  data-action="save-list"
-                  data-list-type="blocklist"
-                  aria-label="Save block list patterns"
-                  title="Save block list patterns"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path>
-                  </svg>
-                </button>
-              </div>
+        <section class="panel" data-tab-panel="general">
+            <div class="card statusCard">
+                <p class="eyebrow">Current mode</p>
+                <h2 id="modeSummaryTitle">Block only listed sites</h2>
+                <p id="modeSummaryBody">NoComment will leave comments visible unless a page matches your Block List.</p>
             </div>
 
-            <div class="saveHint" id="blocklistSaveHint" hidden>
-              Changes here are not applied until you press the
-              <span class="inlineIconLabel">
-                <strong>Save button</strong>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path>
-                </svg>
-                <strong>above</strong>
-              </span>.
+            <div class="card">
+                <h2>Default behaviour</h2>
+                <p>Choose whether NoComment blocks comment sections everywhere by default, or only on sites you add to
+                    the Block List.</p>
+
+                <div class="choiceGrid">
+                    <label class="choiceCard">
+                        <input type="radio" id="blockByList" name="blockingMode" />
+                        <span>Only block sites in my Block List</span>
+                    </label>
+                    <label class="choiceCard">
+                        <input type="radio" id="blockByDefault" name="blockingMode" />
+                        <span>Block comments everywhere except my Allow List</span>
+                    </label>
+                </div>
             </div>
 
-            <div class="listComposer">
-              <input type="text" id="blocklistInput" placeholder="www.example.com/*" />
-              <button type="button" data-action="add" data-list-type="blocklist">Add pattern</button>
+            <div class="card">
+                <h2>Hide style</h2>
+                <label class="fieldLabel" for="visualDisplay">When comments are blocked:</label>
+                <select id="visualDisplay">
+                    <option value="collapse">Collapse the section and remove its space</option>
+                    <option value="hidden">Keep the layout space but hide the content</option>
+                </select>
             </div>
 
-            <table id="blocklistTable">
-              <thead>
-                <tr>
-                  <th>Pattern</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </section>
+            <div class="actionRow">
+                <button type="button" id="saveSettings">Save general settings</button>
+                <p id="generalNotice" class="notice" hidden>Saved.</p>
+            </div>
+        </section>
 
-          <section class="card">
-            <div class="cardHeader">
-              <div>
-                <p class="eyebrow">Exceptions</p>
-                <h2>Allow List</h2>
-                <p class="helperText">Use this when you want comments blocked everywhere else.</p>
-              </div>
-              <div class="inlineActions">
-                <button
-                  type="button"
-                  class="iconButton"
-                  data-action="clear"
-                  data-list-type="allowlist"
-                  aria-label="Clear all allow list patterns"
-                  title="Clear all allow list patterns"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2h4v2H4V6h4l1-2z"></path>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="iconButton"
-                  data-action="save-list"
-                  data-list-type="allowlist"
-                  aria-label="Save allow list patterns"
-                  title="Save allow list patterns"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path>
-                  </svg>
-                </button>
-              </div>
+        <section class="panel" data-tab-panel="lists" hidden>
+            <div class="card">
+                <h2>Pattern guide</h2>
+                <p>Add hostnames or route patterns. Wildcards with <code>*</code> are supported and protocols are optional.</p>
+                <p><small><code>youtube.com/@mrbeast</code> (all comments on all YouTube videos by MrBeast)</small></p>
+                <p><small><code>https://www.facebook.com/zuck/posts/*</code> (all replies on all Facebook posts by Mark Zuckerberg)</small></p>
+                <p><small><code>https://x.com/brunomars/*</code> (all replies on all X posts by Bruno Mars)</small></p>
+                <p><small><code>www.youtube.com/*</code> (all comments on all YouTube videos)</small></p>
+                <p><small><code>x.com/*/status/*</code> (all replies on all X posts)</small></p>
+                <p><small><code>www.reddit.com/r/news/*</code> (all replies on all Reddit posts inside the r/news subreddit)</small></p>
+
             </div>
 
-            <div class="saveHint" id="allowlistSaveHint" hidden>
-              Changes here are not applied until you press the
-              <span class="inlineIconLabel">
-                <strong>Save button</strong>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path>
-                </svg>
-                <strong>above</strong>
-              </span>.
+            <div class="listGrid">
+                <section class="card">
+                    <div class="cardHeader">
+                        <div>
+                            <p class="eyebrow">Targets</p>
+                            <h2>Block List <span id="blocklistActiveBadge" class="activeBadge" hidden>(Active)</span></h2>
+                            <p class="helperText">Use this when you only want to block specific pages or sites.</p>
+                        </div>
+                        <div class="inlineActions">
+                            <button type="button" class="iconButton" data-action="clear" data-list-type="blocklist"
+                                aria-label="Clear all block list patterns" title="Clear all block list patterns">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2h4v2H4V6h4l1-2z"></path>
+                                </svg>
+                            </button>
+                            <button type="button" class="iconButton" data-action="save-list" data-list-type="blocklist"
+                                aria-label="Save block list patterns" title="Save block list patterns">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path
+                                        d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="saveHint" id="blocklistSaveHint" hidden>
+                        Changes here are not applied until you press the
+                        <span class="inlineIconLabel">
+                            <strong>Save button</strong>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path
+                                    d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z">
+                                </path>
+                            </svg>
+                            <strong>above</strong>
+                        </span>.
+                    </div>
+
+                    <div class="listComposer">
+                        <input type="text" id="blocklistInput" placeholder="www.example.com/*" />
+                        <button type="button" data-action="add" data-list-type="blocklist">Add pattern</button>
+                    </div>
+
+                    <table id="blocklistTable">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </section>
+
+                <section class="card">
+                    <div class="cardHeader">
+                        <div>
+                            <p class="eyebrow">Exceptions</p>
+                            <h2>Allow List <span id="allowlistActiveBadge" class="activeBadge" hidden>(Active)</span></h2>
+                            <p class="helperText">Use this when you want comments blocked everywhere else.</p>
+                        </div>
+                        <div class="inlineActions">
+                            <button type="button" class="iconButton" data-action="clear" data-list-type="allowlist"
+                                aria-label="Clear all allow list patterns" title="Clear all allow list patterns">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2h4v2H4V6h4l1-2z"></path>
+                                </svg>
+                            </button>
+                            <button type="button" class="iconButton" data-action="save-list" data-list-type="allowlist"
+                                aria-label="Save allow list patterns" title="Save allow list patterns">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path
+                                        d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="saveHint" id="allowlistSaveHint" hidden>
+                        Changes here are not applied until you press the
+                        <span class="inlineIconLabel">
+                            <strong>Save button</strong>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path
+                                    d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM7 5h8v4H7V5zm12 14H5V5h1v6h10V5h.17L19 7.83V19zm-7-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z">
+                                </path>
+                            </svg>
+                            <strong>above</strong>
+                        </span>.
+                    </div>
+
+                    <div class="listComposer">
+                        <input type="text" id="allowlistInput" placeholder="www.example.com/*" />
+                        <button type="button" data-action="add" data-list-type="allowlist">Add pattern</button>
+                    </div>
+
+                    <table id="allowlistTable">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </section>
+            </div>
+        </section>
+
+        <section class="panel" data-tab-panel="about" hidden>
+            <div class="card prose">
+                <h2>How it works</h2>
+                <p>NoComment scans each page for common comment containers and hides them according to your saved rules.
+                </p>
+                <p>Use the Allow List when you block comments everywhere by default, or the Block List when you only
+                    want to target selected sites.</p>
+                <p>The extension popup shows whether the current page is being changed right now.</p>
             </div>
 
-            <div class="listComposer">
-              <input type="text" id="allowlistInput" placeholder="www.example.com/*" />
-              <button type="button" data-action="add" data-list-type="allowlist">Add pattern</button>
+            <div class="card prose">
+                <h2>About</h2>
+                <p>This extension was originally created back in 2015 by myself and is fully open-source on GitHub: <a
+                        href="https://github.com/dsgriffin/NoComment" target="_blank"
+                        rel="noreferrer">https://github.com/dsgriffin/NoComment</a>.</p>
             </div>
-
-            <table id="allowlistTable">
-              <thead>
-                <tr>
-                  <th>Pattern</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </section>
-        </div>
-      </section>
-
-      <section class="panel" data-tab-panel="about" hidden>
-        <div class="card prose">
-          <h2>How it works</h2>
-          <p>NoComment scans each page for common comment containers and hides them according to your saved rules.</p>
-          <p>Use the Allow List when you block comments everywhere by default, or the Block List when you only want to target selected sites.</p>
-          <p>The extension popup shows whether the current page is being changed right now.</p>
-        </div>
-
-        <div class="card prose">
-          <h2>About</h2>
-          <p>This extension was originally created back in 2015 by myself and is fully open-source on GitHub: <a href="https://github.com/dsgriffin/NoComment" target="_blank" rel="noreferrer">https://github.com/dsgriffin/NoComment</a>.</p>
-        </div>
-      </section>
+        </section>
     </main>
 
     <script src="options.js"></script>
-  </body>
+</body>
+
 </html>

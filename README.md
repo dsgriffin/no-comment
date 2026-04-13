@@ -9,6 +9,8 @@ Use URL patterns to decide where comments should be blocked or allowed.
 Examples:
 
 - `www.youtube.com/*`
+- `www.youtube.com/@theoryofficial`
+- `www.youtube.com/channel/UCcFUPGt_tgcP5iMxiBDsXoA`
 - `x.com/*/status/*`
 - `www.reddit.com/r/news/*`
 

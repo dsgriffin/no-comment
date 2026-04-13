@@ -31,7 +31,8 @@ const visualDisplay = document.getElementById("visualDisplay") as HTMLSelectElem
 const generalNotice = document.getElementById("generalNotice");
 const modeSummaryTitle = document.getElementById("modeSummaryTitle");
 const modeSummaryBody = document.getElementById("modeSummaryBody");
-const listModeHint = document.getElementById("listModeHint");
+const blocklistActiveBadge = document.getElementById("blocklistActiveBadge");
+const allowlistActiveBadge = document.getElementById("allowlistActiveBadge");
 const saveHints: Record<ListType, HTMLElement | null> = {
   allowlist: document.getElementById("allowlistSaveHint"),
   blocklist: document.getElementById("blocklistSaveHint"),
@@ -209,19 +210,19 @@ const syncGeneralForm = (): void => {
   blockByListInput.checked = !state.blockAllComments;
   visualDisplay.value = state.display;
 
-  if (modeSummaryTitle && modeSummaryBody && listModeHint) {
+  if (modeSummaryTitle && modeSummaryBody && blocklistActiveBadge && allowlistActiveBadge) {
     if (state.blockAllComments) {
       modeSummaryTitle.textContent = "Block everywhere except allowed pages";
       modeSummaryBody.textContent =
         "NoComment will hide comments by default. Anything in your Allow List becomes an exception.";
-      listModeHint.textContent =
-        "Allow List entries are active right now because you are using block-everywhere mode.";
+      allowlistActiveBadge.hidden = false;
+      blocklistActiveBadge.hidden = true;
     } else {
       modeSummaryTitle.textContent = "Block only listed sites";
       modeSummaryBody.textContent =
         "NoComment will leave comments visible unless a page matches your Block List.";
-      listModeHint.textContent =
-        "Block List entries are active right now because you are using block-only mode.";
+      blocklistActiveBadge.hidden = false;
+      allowlistActiveBadge.hidden = true;
     }
   }
 };

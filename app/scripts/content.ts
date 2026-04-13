@@ -5,6 +5,12 @@ interface SiteSelectorRule {
   selectors: readonly string[];
 }
 
+interface YouTubeChannelContext {
+  channelIds: Set<string>;
+  handles: Set<string>;
+  customPaths: Set<string>;
+}
+
 const SITE_SELECTOR_RULES: readonly SiteSelectorRule[] = [
   {
     hostnames: ["youtube.com", "www.youtube.com", "m.youtube.com"],
@@ -86,6 +92,7 @@ let currentState: PageState = {
 let observer: MutationObserver | null = null;
 let mutationFrame = 0;
 let blockingActive = false;
+let mutationTrackingActive = false;
 
 const getStorage = async (): Promise<UserSettings> => {
   const stored = await chrome.storage.sync.get(STORAGE_DEFAULTS);
@@ -125,14 +132,192 @@ const patternToRegex = (pattern: string): RegExp | null => {
 const getComparableUrl = (): string =>
   `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
 
+const isYouTubeHostname = (hostname: string): boolean =>
+  ["youtube.com", "www.youtube.com", "m.youtube.com"].includes(hostname.toLowerCase());
+
+const normalizeYouTubeHandle = (value: string): string => value.trim().replace(/^@/, "").toLowerCase();
+
+const normalizeYouTubePath = (value: string): string => {
+  const [pathWithoutQuery] = value.split(/[?#]/, 1);
+  const trimmed = pathWithoutQuery.trim().replace(/\/+\*?$/, "");
+
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.startsWith("/") ? trimmed.toLowerCase() : `/${trimmed.toLowerCase()}`;
+};
+
+const parseYouTubeChannelPath = (
+  value: string,
+): { type: "channelId" | "handle" | "customPath"; value: string } | null => {
+  const normalizedPath = normalizeYouTubePath(value);
+
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const segments = normalizedPath.split("/").filter(Boolean);
+  const [firstSegment, secondSegment] = segments;
+
+  if (!firstSegment) {
+    return null;
+  }
+
+  if (firstSegment.startsWith("@")) {
+    const handle = normalizeYouTubeHandle(firstSegment);
+    return handle ? { type: "handle", value: handle } : null;
+  }
+
+  if (firstSegment === "channel" && secondSegment) {
+    return { type: "channelId", value: secondSegment };
+  }
+
+  if ((firstSegment === "c" || firstSegment === "user") && secondSegment) {
+    return { type: "customPath", value: `/${firstSegment}/${secondSegment}` };
+  }
+
+  return null;
+};
+
+const extractYouTubeChannelRule = (
+  rule: string,
+): { type: "channelId" | "handle" | "customPath"; value: string } | null => {
+  const trimmed = rule.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith("@")) {
+    const handle = normalizeYouTubeHandle(trimmed);
+    return handle ? { type: "handle", value: handle } : null;
+  }
+
+  const normalized = normalizePattern(trimmed);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const parseableUrl = normalized.replace(/^\*:\/\//, "https://");
+
+  try {
+    const parsedUrl = new URL(parseableUrl);
+
+    if (!isYouTubeHostname(parsedUrl.hostname)) {
+      return null;
+    }
+
+    return parseYouTubeChannelPath(parsedUrl.pathname);
+  } catch {
+    return null;
+  }
+};
+
+const collectYouTubePaths = (selectors: readonly string[]): string[] =>
+  selectors.flatMap((selector) =>
+    Array.from(document.querySelectorAll<HTMLAnchorElement>(selector))
+      .map((link) => link.getAttribute("href") ?? "")
+      .filter(Boolean),
+  );
+
+const getYouTubeChannelContext = (): YouTubeChannelContext | null => {
+  if (!isYouTubeHostname(window.location.hostname)) {
+    return null;
+  }
+
+  const context: YouTubeChannelContext = {
+    channelIds: new Set<string>(),
+    handles: new Set<string>(),
+    customPaths: new Set<string>(),
+  };
+
+  const channelIdMeta = document.querySelector<HTMLMetaElement>("meta[itemprop='channelId']");
+  const channelId = channelIdMeta?.content.trim();
+
+  if (channelId) {
+    context.channelIds.add(channelId);
+  }
+
+  const candidatePaths = [
+    window.location.pathname,
+    ...collectYouTubePaths([
+      "ytd-watch-metadata ytd-channel-name a[href]",
+      "#owner a[href]",
+      "ytd-video-owner-renderer a[href]",
+      "ytm-slim-owner-renderer a[href]",
+      "a[href^='/@']",
+      "a[href^='/channel/']",
+      "a[href^='/c/']",
+      "a[href^='/user/']",
+    ]),
+  ];
+
+  candidatePaths.forEach((path) => {
+    const parsedPath = parseYouTubeChannelPath(path);
+
+    if (!parsedPath) {
+      return;
+    }
+
+    if (parsedPath.type === "channelId") {
+      context.channelIds.add(parsedPath.value);
+      return;
+    }
+
+    if (parsedPath.type === "handle") {
+      context.handles.add(parsedPath.value);
+      return;
+    }
+
+    context.customPaths.add(parsedPath.value);
+  });
+
+  return context.channelIds.size > 0 || context.handles.size > 0 || context.customPaths.size > 0 ? context : null;
+};
+
+const matchesYouTubeChannelRule = (rule: string): boolean => {
+  const channelRule = extractYouTubeChannelRule(rule);
+
+  if (!channelRule) {
+    return false;
+  }
+
+  const channelContext = getYouTubeChannelContext();
+
+  if (!channelContext) {
+    return false;
+  }
+
+  if (channelRule.type === "channelId") {
+    return channelContext.channelIds.has(channelRule.value);
+  }
+
+  if (channelRule.type === "handle") {
+    return channelContext.handles.has(channelRule.value);
+  }
+
+  return channelContext.customPaths.has(channelRule.value);
+};
+
 const matchesRule = (rules: string[]): boolean => {
   const currentUrl = getComparableUrl();
 
   return rules.some((rule) => {
+    if (matchesYouTubeChannelRule(rule)) {
+      return true;
+    }
+
     const regex = patternToRegex(rule);
     return regex ? regex.test(currentUrl) : false;
   });
 };
+
+const hasYouTubeChannelRule = (rules: readonly string[]): boolean => rules.some((rule) => extractYouTubeChannelRule(rule) !== null);
+
+const shouldTrackDynamicMutations = (): boolean =>
+  isYouTubeHostname(window.location.hostname) && hasYouTubeChannelRule([...currentSettings.allowlist, ...currentSettings.blocklist]);
 
 const hostnameMatches = (hostname: string, allowedHostnames: readonly string[]): boolean =>
   allowedHostnames.some(
@@ -223,9 +408,11 @@ const restoreHiddenElements = (): void => {
 };
 
 const updateObserver = (shouldObserve: boolean): void => {
+  mutationTrackingActive = shouldObserve;
+
   if (shouldObserve && !observer) {
     observer = new MutationObserver(() => {
-      if (!blockingActive || mutationFrame !== 0) {
+      if (!mutationTrackingActive || mutationFrame !== 0) {
         return;
       }
 
@@ -278,7 +465,7 @@ const applySettings = async (resetExisting = false): Promise<PageState> => {
     isBlocking: shouldBlock && allMatchedComments.length > 0,
   };
 
-  updateObserver(shouldBlock);
+  updateObserver(shouldBlock || shouldTrackDynamicMutations());
   notifyPageState();
 
   return currentState;

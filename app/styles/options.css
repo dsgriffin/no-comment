@@ -166,6 +166,13 @@ code {
   font-size: 24px;
 }
 
+.activeBadge {
+  color: var(--accent);
+  font-size: 0.72em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .card p {
   margin: 0 0 10px;
 }
